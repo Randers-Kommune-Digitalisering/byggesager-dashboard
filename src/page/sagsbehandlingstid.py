@@ -7,13 +7,12 @@ import streamlit_shadcn_ui as ui
 
 
 def get_byggesager_data():
-    st.title("Kategori Visualiseringer")
-
     col_1 = st.columns([1])[0]
 
     with col_1:
         content_tabs = sac.tabs([
             sac.TabsItem('Sagsbehandlingstid', tag='Sagsbehandlingstid'),
+            sac.TabsItem('Samlet', tag='Samlet')
         ], color='dark', size='md', position='top', align='start', use_container_width=True)
 
     try:
@@ -27,29 +26,14 @@ def get_byggesager_data():
 
         available_years = sorted(final_result['Year'].unique())
 
-        if 'selected_year' not in st.session_state:
-            st.session_state.selected_year = available_years[0]
-
-        if 'selected_category' not in st.session_state:
-            st.session_state.selected_category = get_categories()[0]
-
         if content_tabs == 'Sagsbehandlingstid':
-            selected_year = st.selectbox(
-                "Vælg et år",
-                available_years,
-                index=available_years.index(st.session_state.selected_year),
-                key='selected_year'
-            )
+            selected_year = st.selectbox("Vælg et år", available_years)
 
             year_data = final_result[final_result['Year'] == selected_year]
 
             categories = get_categories()
-            selected_category = st.selectbox(
-                "Vælg en kategori",
-                categories,
-                index=categories.index(st.session_state.selected_category),
-                key='selected_category'
-            )
+
+            selected_category = st.selectbox("Vælg en kategori", categories)
 
             st.write(f"## {selected_category} for {selected_year}")
             category_data = year_data[year_data['Kategori'] == selected_category]
@@ -106,6 +90,54 @@ def get_byggesager_data():
                 height=300
             )
             st.altair_chart(bar_chart_service_goal, use_container_width=True)
+
+        elif content_tabs == 'Samlet':
+            selected_year = st.selectbox("Vælg et år", available_years, key='dual_axis_year')
+
+            year_data = final_result[final_result['Year'] == selected_year]
+
+            categories = get_categories()
+
+            selected_category = st.selectbox("Vælg en kategori", categories, key='dual_axis_category')
+
+            st.write(f"## Samlet graf for {selected_category} i {selected_year}")
+            category_data = year_data[year_data['Kategori'] == selected_category]
+
+            monthly_data = category_data.groupby('Måned', sort=False).mean(numeric_only=True).reset_index()
+
+            monthly_data['SortOrder'] = monthly_data['Måned'].apply(lambda x: list(calendar.month_abbr).index(x))
+
+            monthly_data = monthly_data.sort_values('SortOrder')
+
+            base = alt.Chart(monthly_data).encode(
+                x=alt.X('Måned:N', title='Måned', sort=list(calendar.month_abbr)[1:])
+            )
+
+            bar = base.mark_bar(color='steelblue').encode(
+                y=alt.Y('Sagsbehandlingstid:Q', title='Sagsbehandlingstid (dage)'),
+                tooltip=[
+                    alt.Tooltip('Måned:N', title='Måned'),
+                    alt.Tooltip('Sagsbehandlingstid:Q', title='Sagsbehandlingstid (dage)', format='.2f')
+                ]
+            )
+
+            line = base.mark_line(color='orange').encode(
+                y=alt.Y('Servicemål i procent:Q', title='Servicemål (%)', axis=alt.Axis(titleColor='orange')),
+
+                tooltip=[
+                    alt.Tooltip('Måned:N', title='Måned'),
+                    alt.Tooltip('Servicemål i procent:Q', title='Servicemål (%)', format='.2f')
+                ]
+            )
+
+            dual_axis_chart = alt.layer(bar, line).resolve_scale(
+                y='independent'
+            ).properties(
+                width=600,
+                height=400
+            )
+
+            st.altair_chart(dual_axis_chart, use_container_width=True)
 
     except Exception as e:
         st.error(f"An error occurred: {e}")
