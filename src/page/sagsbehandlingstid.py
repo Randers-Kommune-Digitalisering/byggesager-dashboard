@@ -27,14 +27,29 @@ def get_byggesager_data():
 
         available_years = sorted(final_result['Year'].unique())
 
+        if 'selected_year' not in st.session_state:
+            st.session_state.selected_year = available_years[0]
+
+        if 'selected_category' not in st.session_state:
+            st.session_state.selected_category = get_categories()[0]
+
         if content_tabs == 'Sagsbehandlingstid':
-            selected_year = st.selectbox("Vælg et år", available_years)
+            selected_year = st.selectbox(
+                "Vælg et år",
+                available_years,
+                index=available_years.index(st.session_state.selected_year),
+                key='selected_year'
+            )
 
             year_data = final_result[final_result['Year'] == selected_year]
 
             categories = get_categories()
-
-            selected_category = st.selectbox("Vælg en kategori", categories)
+            selected_category = st.selectbox(
+                "Vælg en kategori",
+                categories,
+                index=categories.index(st.session_state.selected_category),
+                key='selected_category'
+            )
 
             st.write(f"## {selected_category} for {selected_year}")
             category_data = year_data[year_data['Kategori'] == selected_category]
