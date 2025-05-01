@@ -6,7 +6,7 @@ from utils.byggesager_data import fetch_kategori_data, process_kategori_data, ge
 import streamlit_shadcn_ui as ui
 
 
-def get_kategori_data():
+def get_byggesager_data():
     st.title("Kategori Visualiseringer")
 
     col_1 = st.columns([1])[0]
