@@ -16,27 +16,35 @@ def get_byggesager_data():
         ], color='dark', size='md', position='top', align='start', use_container_width=True)
 
     try:
-        if 'kategori_data_final_result' not in st.session_state:
-            with st.spinner('Loading data...'):
-                raw_data = fetch_kategori_data()
-                processed_data = process_kategori_data(raw_data)
-                st.session_state.kategori_data_final_result = processed_data
+        historical_data = fetch_kategori_data()
+        if historical_data is None:
+            st.error("Failed to fetch data from the database.")
+            st.stop()
 
-        final_result = st.session_state.kategori_data_final_result
+        final_result = process_kategori_data(historical_data)
+        if final_result is None or final_result.empty:
+            st.error("Failed to process data or no data available.")
+            st.stop()
 
         available_years = sorted(final_result['Year'].unique())
 
         if content_tabs == 'Sagsbehandlingstid':
             selected_year = st.selectbox("Vælg et år", available_years, help='Vælg et år for at se data', key='year_selection')
-
             year_data = final_result[final_result['Year'] == selected_year]
 
             categories = get_categories()
+            if not categories:
+                st.error("No categories available.")
+                st.stop()
 
             selected_category = st.selectbox("Vælg en kategori", categories, help='Vælg en kategori for at se data', key='category_selection')
 
             st.write(f"## {selected_category} for {selected_year}")
             category_data = year_data[year_data['Kategori'] == selected_category]
+
+            if category_data.empty:
+                st.warning("No data available for the selected category and year.")
+                return
 
             avg_processing_time = category_data['Sagsbehandlingstid'].mean()
             avg_service_goal = category_data['Servicemål i procent'].mean()
@@ -58,9 +66,7 @@ def get_byggesager_data():
                 )
 
             monthly_data = category_data.groupby('Måned', sort=False).mean(numeric_only=True).reset_index()
-
             monthly_data['SortOrder'] = monthly_data['Måned'].apply(lambda x: list(calendar.month_abbr).index(x))
-
             monthly_data = monthly_data.sort_values('SortOrder')
 
             st.write("### Gennemsnitlig Sagsbehandlingstid pr. måned")
@@ -93,20 +99,24 @@ def get_byggesager_data():
 
         elif content_tabs == 'Samlet':
             selected_year = st.selectbox("Vælg et år", available_years, help='Vælg et år for at se data', key='dual_axis_year_selection')
-
             year_data = final_result[final_result['Year'] == selected_year]
 
             categories = get_categories()
+            if not categories:
+                st.error("No categories available.")
+                st.stop()
 
             selected_category = st.selectbox("Vælg en kategori", categories, help='Vælg en kategori for at se data', key='dual_axis_category_selection')
 
             st.write(f"## Samlet graf for {selected_category} i {selected_year}")
             category_data = year_data[year_data['Kategori'] == selected_category]
 
+            if category_data.empty:
+                st.warning("No data available for the selected category and year.")
+                return
+
             monthly_data = category_data.groupby('Måned', sort=False).mean(numeric_only=True).reset_index()
-
             monthly_data['SortOrder'] = monthly_data['Måned'].apply(lambda x: list(calendar.month_abbr).index(x))
-
             monthly_data = monthly_data.sort_values('SortOrder')
 
             base = alt.Chart(monthly_data).encode(
@@ -123,7 +133,6 @@ def get_byggesager_data():
 
             line = base.mark_line(color='orange').encode(
                 y=alt.Y('Servicemål i procent:Q', title='Servicemål (%)', axis=alt.Axis(titleColor='orange')),
-
                 tooltip=[
                     alt.Tooltip('Måned:N', title='Måned'),
                     alt.Tooltip('Servicemål i procent:Q', title='Servicemål (%)', format='.2f')
