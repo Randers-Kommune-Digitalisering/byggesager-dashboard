@@ -27,13 +27,13 @@ def get_byggesager_data():
         available_years = sorted(final_result['Year'].unique())
 
         if content_tabs == 'Sagsbehandlingstid':
-            selected_year = st.selectbox("Vælg et år", available_years)
+            selected_year = st.selectbox("Vælg et år", available_years, help='Vælg et år for at se data', key='year_selection')
 
             year_data = final_result[final_result['Year'] == selected_year]
 
             categories = get_categories()
 
-            selected_category = st.selectbox("Vælg en kategori", categories)
+            selected_category = st.selectbox("Vælg en kategori", categories, help='Vælg en kategori for at se data', key='category_selection')
 
             st.write(f"## {selected_category} for {selected_year}")
             category_data = year_data[year_data['Kategori'] == selected_category]
@@ -92,13 +92,13 @@ def get_byggesager_data():
             st.altair_chart(bar_chart_service_goal, use_container_width=True)
 
         elif content_tabs == 'Samlet':
-            selected_year = st.selectbox("Vælg et år", available_years, key='dual_axis_year')
+            selected_year = st.selectbox("Vælg et år", available_years, help='Vælg et år for at se data', key='dual_axis_year_selection')
 
             year_data = final_result[final_result['Year'] == selected_year]
 
             categories = get_categories()
 
-            selected_category = st.selectbox("Vælg en kategori", categories, key='dual_axis_category')
+            selected_category = st.selectbox("Vælg en kategori", categories, help='Vælg en kategori for at se data', key='dual_axis_category_selection')
 
             st.write(f"## Samlet graf for {selected_category} i {selected_year}")
             category_data = year_data[year_data['Kategori'] == selected_category]
