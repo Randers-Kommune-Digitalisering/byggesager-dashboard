@@ -4,6 +4,7 @@ import altair as alt
 import calendar
 from utils.byggesager_data import fetch_kategori_data, process_kategori_data, get_categories
 import streamlit_shadcn_ui as ui
+import pandas as pd
 
 
 def get_byggesager_data():
@@ -11,8 +12,9 @@ def get_byggesager_data():
 
     with col_1:
         content_tabs = sac.tabs([
-            sac.TabsItem('Sagsbehandlingstid', tag='Sagsbehandlingstid'),
-            sac.TabsItem('Samlet', tag='Samlet')
+            sac.TabsItem('Sagsbehandlingstid', tag='Sagsbehandlingstid', icon='bi bi-hourglass-split'),
+            sac.TabsItem('Samlet', tag='Samlet', icon='bi bi-bar-chart'),
+            sac.TabsItem('Gennemsnitligt Servicemål', tag='Gennemsnitligt Servicemål', icon='bi bi-bullseye')
         ], color='dark', size='md', position='top', align='start', use_container_width=True)
 
     try:
@@ -136,6 +138,72 @@ def get_byggesager_data():
                 tooltip=[
                     alt.Tooltip('Måned:N', title='Måned'),
                     alt.Tooltip('Servicemål i procent:Q', title='Servicemål (%)', format='.2f')
+                ]
+            )
+
+            dual_axis_chart = alt.layer(bar, line).resolve_scale(
+                y='independent'
+            ).properties(
+                width=600,
+                height=400
+            )
+
+            st.altair_chart(dual_axis_chart, use_container_width=True)
+
+        elif content_tabs == 'Gennemsnitligt Servicemål':
+            selected_year = st.selectbox("Vælg et år", available_years, help='Vælg et år for at se data', key='rolling_avg_year_selection')
+            year_data = final_result[final_result['Year'] == selected_year]
+
+            categories = get_categories()
+            if not categories:
+                st.error("No categories available.")
+                st.stop()
+
+            selected_category = st.selectbox("Vælg en kategori", categories, help='Vælg en kategori for at se data', key='rolling_avg_service_goal_category_selection')
+
+            st.write(f"## Gennemsnitligt Servicemål (12 måneder) for {selected_category} i {selected_year}")
+            category_data = year_data[year_data['Kategori'] == selected_category].copy()
+
+            if category_data.empty:
+                st.warning("No data available for the selected category and year.")
+                return
+
+            category_data['Date'] = pd.to_datetime(category_data['Year'].astype(str) + '-' + category_data['Måned'], format='%Y-%b')
+
+            category_data['RollingAvgServiceGoal'] = category_data['Servicemål i procent'].rolling(window=12, min_periods=1).mean()
+
+            avg_rolling_service_goal = category_data['RollingAvgServiceGoal'].iloc[-12:].mean()
+
+            col1 = st.columns(1)[0]
+
+            with col1:
+                ui.metric_card(
+                    title="Gennemsnitligt Servicemål (12 måneder) (%)",
+                    content=f"{avg_rolling_service_goal:.2f}",
+                    description="Gennemsnitligt opfyldelse af servicemål i procent for de seneste 12 måneder."
+                )
+
+            monthly_data = category_data.groupby('Måned', sort=False).mean(numeric_only=True).reset_index()
+            monthly_data['SortOrder'] = monthly_data['Måned'].apply(lambda x: list(calendar.month_abbr).index(x))
+            monthly_data = monthly_data.sort_values('SortOrder')
+
+            base = alt.Chart(monthly_data).encode(
+                x=alt.X('Måned:N', title='Måned', sort=list(calendar.month_abbr)[1:])
+            )
+
+            bar = base.mark_bar(color='steelblue').encode(
+                y=alt.Y('Sagsbehandlingstid:Q', title='Sagsbehandlingstid (dage)'),
+                tooltip=[
+                    alt.Tooltip('Måned:N', title='Måned'),
+                    alt.Tooltip('Sagsbehandlingstid:Q', title='Sagsbehandlingstid (dage)', format='.2f')
+                ]
+            )
+
+            line = base.mark_line(color='orange').encode(
+                y=alt.Y('RollingAvgServiceGoal:Q', title='Gennemsnitligt Servicemål (%)', axis=alt.Axis(titleColor='orange')),
+                tooltip=[
+                    alt.Tooltip('Måned:N', title='Måned'),
+                    alt.Tooltip('RollingAvgServiceGoal:Q', title='Gennemsnitligt Servicemål (%)', format='.2f')
                 ]
             )
 
