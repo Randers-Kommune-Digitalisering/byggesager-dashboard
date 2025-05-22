@@ -8,7 +8,7 @@ db_client = get_byggesager_db()
 def fetch_kategori_data():
     query = """
     SELECT "Fra Dato", "Kategori", "Sagsbehandlingstid", "Servicemål i procent"
-    FROM "bom_data"
+    FROM "bom_data_updated"
     """
     try:
         result = db_client.execute_sql(query)
