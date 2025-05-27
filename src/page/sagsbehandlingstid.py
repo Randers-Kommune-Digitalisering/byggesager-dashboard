@@ -15,7 +15,7 @@ def get_byggesager_data():
             sac.TabsItem('Sagsbehandlingstid', tag='Sagsbehandlingstid', icon='bi bi-hourglass-split'),
             sac.TabsItem('Servicemål Gennemsnittet', tag='Servicemål Gennemsnittet', icon='bi bi-bar-chart'),
             sac.TabsItem('Glidende Gennemsnit', tag='Glidende Gennemsnit', icon='bi bi-bullseye'),
-            sac.TabsItem('Historiske data', tag='Historiske data', icon='bi bi-clock-history')
+            sac.TabsItem('Historiske data', tag='Historiske data', icon='bi bi-clock-history'),
         ], color='dark', size='md', position='top', align='start', use_container_width=True)
 
     try:
@@ -76,6 +76,7 @@ def get_byggesager_data():
             bar_chart_processing_time = alt.Chart(monthly_data).mark_bar().encode(
                 x=alt.X('Måned:N', title='Måned', sort=list(calendar.month_abbr)[1:]),
                 y=alt.Y('Sagsbehandlingstid:Q', title='Gennemsnitlig Sagsbehandlingstid (dage)'),
+                color=alt.Color('Sagsbehandlingstid:Q', title='Sagsbehandlingstid (dage)', scale=alt.Scale(scheme='blues')),
                 tooltip=[
                     alt.Tooltip('Måned:N', title='Måned'),
                     alt.Tooltip('Sagsbehandlingstid:Q', title='Sagsbehandlingstid (dage)', format='.2f')
@@ -90,6 +91,7 @@ def get_byggesager_data():
             bar_chart_service_goal = alt.Chart(monthly_data).mark_bar().encode(
                 x=alt.X('Måned:N', title='Måned', sort=list(calendar.month_abbr)[1:]),
                 y=alt.Y('Servicemål i procent:Q', title='Gennemsnitligt Servicemål (%)'),
+                color=alt.Color('Servicemål i procent:Q', title='Servicemål (%)', scale=alt.Scale(scheme='blues')),
                 tooltip=[
                     alt.Tooltip('Måned:N', title='Måned'),
                     alt.Tooltip('Servicemål i procent:Q', title='Servicemål (%)', format='.2f')
@@ -126,7 +128,7 @@ def get_byggesager_data():
                 x=alt.X('Måned:N', title='Måned', sort=list(calendar.month_abbr)[1:])
             )
 
-            bar = base.mark_bar(color='steelblue').encode(
+            bar = base.mark_bar().encode(
                 y=alt.Y('Sagsbehandlingstid:Q', title='Sagsbehandlingstid (dage)'),
                 tooltip=[
                     alt.Tooltip('Måned:N', title='Måned'),
@@ -192,7 +194,7 @@ def get_byggesager_data():
                 x=alt.X('Måned:N', title='Måned', sort=list(calendar.month_abbr)[1:])
             )
 
-            bar = base.mark_bar(color='steelblue').encode(
+            bar = base.mark_bar().encode(
                 y=alt.Y('Sagsbehandlingstid:Q', title='Sagsbehandlingstid (dage)'),
                 tooltip=[
                     alt.Tooltip('Måned:N', title='Måned'),
