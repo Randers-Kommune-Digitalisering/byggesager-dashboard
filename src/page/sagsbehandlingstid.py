@@ -16,6 +16,7 @@ def get_byggesager_data():
             sac.TabsItem('Servicemål Gennemsnittet', tag='Servicemål Gennemsnittet', icon='bi bi-bar-chart'),
             sac.TabsItem('Glidende Gennemsnit', tag='Glidende Gennemsnit', icon='bi bi-bullseye'),
             sac.TabsItem('Historiske data', tag='Historiske data', icon='bi bi-clock-history'),
+            sac.TabsItem('BI-Rapport', tag='BI-Rapport', icon='bi bi-file-earmark-bar-graph')
         ], color='dark', size='md', position='top', align='start', use_container_width=True)
 
     try:
@@ -125,7 +126,7 @@ def get_byggesager_data():
             monthly_data = monthly_data.sort_values('SortOrder')
 
             base = alt.Chart(monthly_data).encode(
-                x=alt.X('Måned:N', title='Måned', sort=list(calendar.month_abbr)[1:])
+                x=alt.X('Måned:N', title='Måned', sort=list(calendar.month_abbr)[1:]),
             )
 
             bar = base.mark_bar().encode(
@@ -136,8 +137,9 @@ def get_byggesager_data():
                 ]
             )
 
-            line = base.mark_line(color='orange').encode(
+            line = base.mark_line(point=True).encode(
                 y=alt.Y('Servicemål i procent:Q', title='Servicemål (%)', axis=alt.Axis(titleColor='orange')),
+                color=alt.value('orange'),
                 tooltip=[
                     alt.Tooltip('Måned:N', title='Måned'),
                     alt.Tooltip('Servicemål i procent:Q', title='Servicemål (%)', format='.2f')
@@ -202,8 +204,9 @@ def get_byggesager_data():
                 ]
             )
 
-            line = base.mark_line(color='orange').encode(
+            line = base.mark_line(point=True).encode(
                 y=alt.Y('RollingAvgServiceGoal:Q', title='Gennemsnitligt Servicemål (%)', axis=alt.Axis(titleColor='orange')),
+                color=alt.value('orange'),
                 tooltip=[
                     alt.Tooltip('Måned:N', title='Måned'),
                     alt.Tooltip('RollingAvgServiceGoal:Q', title='Gennemsnitligt Servicemål (%)', format='.2f')
@@ -254,7 +257,7 @@ def get_byggesager_data():
                 y=alt.Y('Servicemål i procent:Q', title='Servicemål (%)', axis=alt.Axis(titleColor='orange')),
                 color=alt.Color('Year:N', title='År', scale=alt.Scale(scheme='set1')),
                 tooltip=[
-                    alt.Tooltip('Year:N', title='År'),
+                    alt.Tooltip('Year:N', title='Årr'),
                     alt.Tooltip('Måned:N', title='Måned'),
                     alt.Tooltip('Servicemål i procent:Q', title='Servicemål (%)', format='.2f')
                 ]
