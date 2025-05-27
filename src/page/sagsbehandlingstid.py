@@ -316,8 +316,8 @@ def get_byggesager_data():
             line = alt.Chart(melted).mark_line(point=True).encode(
                 x=alt.X('Måned:N', sort=list(calendar.month_abbr)[1:]),
                 y=alt.Y('Value:Q', title='Servicemål (%) og Glidende Gennemsnit (%)'),
-                color=alt.Color('Type:N', scale=alt.Scale(domain=['Servicemål i procent', 'Glidende Gennemsnit (%)','Sagsbehandlingstid'],
-                                                                        range=['orange', 'green', 'blue'])),
+                color=alt.Color('Type:N', scale=alt.Scale(domain=['Servicemål i procent', 'Glidende Gennemsnit (%)', 'Sagsbehandlingstid'],
+                                range=['orange', 'green', 'blue'])),
                 tooltip=[
                     alt.Tooltip('Måned:N', title='Måned'),
                     alt.Tooltip('Type:N', title='Type'),
