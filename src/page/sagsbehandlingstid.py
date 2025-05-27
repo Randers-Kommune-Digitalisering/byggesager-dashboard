@@ -13,7 +13,7 @@ def get_byggesager_data():
     with col_1:
         content_tabs = sac.tabs([
             sac.TabsItem('Sagsbehandlingstid', tag='Sagsbehandlingstid', icon='bi bi-hourglass-split'),
-            sac.TabsItem('Servicemål Gennemsnittet', tag='Servicemål Gennemsnittet', icon='bi bi-bar-chart'),
+            sac.TabsItem('Servicemål i %', tag='Servicemål i %', icon='bi bi-bar-chart'),
             sac.TabsItem('Glidende Gennemsnit', tag='Glidende Gennemsnit', icon='bi bi-bullseye'),
             sac.TabsItem('Historiske data', tag='Historiske data', icon='bi bi-clock-history'),
             sac.TabsItem('BI-Rapport', tag='BI-Rapport', icon='bi bi-file-earmark-bar-graph')
@@ -103,7 +103,7 @@ def get_byggesager_data():
             )
             st.altair_chart(bar_chart_service_goal, use_container_width=True)
 
-        elif content_tabs == 'Servicemål Gennemsnittet':
+        elif content_tabs == 'Servicemål i %':
             selected_year = st.selectbox("Vælg et år", available_years, help='Vælg et år for at se data', key='dual_axis_year_selection')
             year_data = final_result[final_result['Year'] == selected_year]
 
@@ -260,6 +260,68 @@ def get_byggesager_data():
                     alt.Tooltip('Year:N', title='Årr'),
                     alt.Tooltip('Måned:N', title='Måned'),
                     alt.Tooltip('Servicemål i procent:Q', title='Servicemål (%)', format='.2f')
+                ]
+            )
+
+            dual_axis_chart = alt.layer(bar, line).resolve_scale(
+                y='independent'
+            ).properties(
+                width=900,
+                height=400
+            )
+
+            st.altair_chart(dual_axis_chart, use_container_width=True)
+
+        elif content_tabs == 'BI-Rapport':
+            selected_year = st.selectbox("Vælg et år", available_years, help='Vælg et år for at se data', key='bi_rapport_year_selection')
+            year_data = final_result[final_result['Year'] == selected_year]
+
+            categories = get_categories()
+            if not categories:
+                st.error("No categories available.")
+                st.stop()
+
+            selected_category = st.selectbox("Vælg en kategori", categories, help='Vælg en kategori for at se data', key="bi_rapport_kategori")
+
+            st.write(f"## Sagsbehandlingstid, Servicemål og Glidende Gennemsnit ({selected_category}) i {selected_year}")
+
+            category_data = final_result[final_result['Kategori'] == selected_category].copy()
+            if category_data.empty:
+                st.warning("Ingen data for valgt kategori.")
+                return
+
+            category_data = year_data[year_data['Kategori'] == selected_category]
+            category_data['Date'] = pd.to_datetime(category_data['Year'].astype(str) + '-' + category_data['Måned'], format='%Y-%b')
+            category_data['Glidende Gennemsnit (%)'] = category_data['Servicemål i procent'].rolling(window=12, min_periods=1).mean()
+
+            monthly_bar = category_data.groupby('Måned', as_index=False).mean(numeric_only=True)
+            monthly_bar['SortOrder'] = monthly_bar['Måned'].apply(lambda x: list(calendar.month_abbr).index(x))
+            monthly_bar = monthly_bar.sort_values('SortOrder')
+
+            base = alt.Chart(monthly_bar).encode(
+                x=alt.X('Måned:N', title='Måned', sort=list(calendar.month_abbr)[1:]),
+            )
+
+            bar = base.mark_bar().encode(
+                y=alt.Y('Sagsbehandlingstid:Q', title='Sagsbehandlingstid (dage)'),
+                tooltip=[
+                    alt.Tooltip('Måned:N', title='Måned'),
+                    alt.Tooltip('Sagsbehandlingstid:Q', title='Sagsbehandlingstid (dage)', format='.2f'),
+                ]
+            )
+
+            melted = monthly_bar.melt(id_vars=['Måned', 'SortOrder'], value_vars=['Servicemål i procent', 'Glidende Gennemsnit (%)'],
+                                      var_name='Type', value_name='Value')
+
+            line = alt.Chart(melted).mark_line(point=True).encode(
+                x=alt.X('Måned:N', sort=list(calendar.month_abbr)[1:]),
+                y=alt.Y('Value:Q', title='Servicemål (%) og Glidende Gennemsnit (%)'),
+                color=alt.Color('Type:N', scale=alt.Scale(domain=['Servicemål i procent', 'Glidende Gennemsnit (%)','Sagsbehandlingstid'],
+                                                                        range=['orange', 'green', 'blue'])),
+                tooltip=[
+                    alt.Tooltip('Måned:N', title='Måned'),
+                    alt.Tooltip('Type:N', title='Type'),
+                    alt.Tooltip('Value:Q', title='Værdi', format='.2f')
                 ]
             )
 
