@@ -5,6 +5,7 @@ import calendar
 from utils.byggesager_data import fetch_kategori_data, process_kategori_data, get_categories
 import streamlit_shadcn_ui as ui
 import pandas as pd
+from io import BytesIO
 
 
 def get_byggesager_data():
@@ -28,16 +29,14 @@ def get_byggesager_data():
             st.stop()
 
         available_years = sorted(final_result['Year'].unique())
+        categories = get_categories()
+        if not categories:
+            st.error("No categories available.")
+            st.stop()
 
         if content_tabs == 'Servicemålprocent':
             selected_year = st.selectbox("Vælg et år", available_years, help='Vælg et år for at se data', key='service_goal_percent_year_selection')
             year_data = final_result[final_result['Year'] == selected_year]
-
-            categories = get_categories()
-            if not categories:
-                st.error("No categories available.")
-                st.stop()
-
             selected_category = st.selectbox("Vælg en kategori", categories, help='Vælg en kategori for at se data', key='service_goal_percent_category_selection')
 
             st.write(f"## Servicemålprocent pr. måned og glidende gennemsnit for {selected_category} i {selected_year}")
@@ -49,9 +48,7 @@ def get_byggesager_data():
 
             category_data['Date'] = pd.to_datetime(category_data['Year'].astype(str) + '-' + category_data['Måned'], format='%Y-%b')
             category_data = category_data.sort_values('Date')
-
             category_data['GlidendeGennemsnitServiceMål'] = category_data['Servicemål i procent'].rolling(window=12, min_periods=1).mean()
-
             avg_rolling_service_goal = category_data['GlidendeGennemsnitServiceMål'].iloc[-12:].mean()
 
             col1 = st.columns(1)[0]
@@ -78,8 +75,7 @@ def get_byggesager_data():
                 ]
             )
 
-            line = alt.Chart(category_data).mark_line(point=True).encode(
-                x=alt.X('Måned:N', title='Måned', sort=list(calendar.month_abbr)[1:]),
+            line = base.mark_line(point=True).encode(
                 y=alt.Y('GlidendeGennemsnitServiceMål:Q', title='Glidende gennemsnit (%)', axis=alt.Axis(titleColor='orange')),
                 color=alt.value('orange'),
                 tooltip=[
@@ -97,16 +93,31 @@ def get_byggesager_data():
 
             st.altair_chart(dual_axis_chart, use_container_width=True)
 
+            export_df = category_data.copy()
+            export_df["Periode"] = export_df["Måned"].astype(str) + " " + export_df["Year"].astype(str)
+            export_df = export_df[["Periode", "Kategori", "Servicemål i procent", "GlidendeGennemsnitServiceMål"]]
+            export_df.rename(columns={
+                "Servicemål i procent": "Servicemål (%)",
+                "GlidendeGennemsnitServiceMål": "Glidende gennemsnit (%)"
+            }, inplace=True)
+
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                export_df.to_excel(writer, index=False, sheet_name='Servicemålprocent')
+            output.seek(0)
+
+            st.download_button(
+                label="Eksporter Servicemålprocent Data til Excel",
+                data=output,
+                file_name=f"servicemaalprocent_{selected_category}_{selected_year}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                type="primary"
+            )
+
         elif content_tabs == 'Sagsbehandlingstid':
-            selected_year = st.selectbox("Vælg et år", available_years, help='Vælg et år for at se data', key='processing_time_rolling_year_selection')
+            selected_year = st.selectbox("Vælg et år", available_years, help='Vælg et år for at se data', key='processing_time_year_selection')
             year_data = final_result[final_result['Year'] == selected_year]
-
-            categories = get_categories()
-            if not categories:
-                st.error("No categories available.")
-                st.stop()
-
-            selected_category = st.selectbox("Vælg en kategori", categories, help='Vælg en kategori for at se data', key='processing_time_rolling_category_selection')
+            selected_category = st.selectbox("Vælg en kategori", categories, help='Vælg en kategori for at se data', key='processing_time_category_selection')
 
             st.write(f"## Sagsbehandlingstid pr. måned og glidende gennemsnit for {selected_category} i {selected_year}")
             category_data = year_data[year_data['Kategori'] == selected_category].copy()
@@ -116,10 +127,7 @@ def get_byggesager_data():
                 return
 
             category_data['Date'] = pd.to_datetime(category_data['Year'].astype(str) + '-' + category_data['Måned'], format='%Y-%b')
-            category_data = category_data.sort_values('Date')
-
             category_data['GlidendeGennemsnitSagsbehandlingstid'] = category_data['Sagsbehandlingstid'].rolling(window=12, min_periods=1).mean()
-
             avg_rolling_processing_time = category_data['GlidendeGennemsnitSagsbehandlingstid'].iloc[-12:].mean()
 
             col1 = st.columns(1)[0]
@@ -146,8 +154,7 @@ def get_byggesager_data():
                 ]
             )
 
-            line = alt.Chart(category_data).mark_line(point=True).encode(
-                x=alt.X('Måned:N', title='Måned', sort=list(calendar.month_abbr)[1:]),
+            line = base.mark_line(point=True).encode(
                 y=alt.Y('GlidendeGennemsnitSagsbehandlingstid:Q', title='Glidende gennemsnit (dage)', axis=alt.Axis(titleColor='orange')),
                 color=alt.value('orange'),
                 tooltip=[
@@ -164,6 +171,27 @@ def get_byggesager_data():
             )
 
             st.altair_chart(dual_axis_chart, use_container_width=True)
+
+            export_df = category_data.copy()
+            export_df["Periode"] = export_df["Måned"].astype(str) + " " + export_df["Year"].astype(str)
+            export_df = export_df[["Periode", "Kategori", "Sagsbehandlingstid", "GlidendeGennemsnitSagsbehandlingstid"]]
+            export_df.rename(columns={
+                "Sagsbehandlingstid": "Sagsbehandlingstid (dage)",
+                "GlidendeGennemsnitSagsbehandlingstid": "Glidende gennemsnit (dage)"
+            }, inplace=True)
+
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                export_df.to_excel(writer, index=False, sheet_name='Sagsbehandlingstid')
+            output.seek(0)
+
+            st.download_button(
+                label="Eksporter Sagsbehandlingstid Data til Excel",
+                data=output,
+                file_name=f"sagsbehandlingstid_{selected_category}_{selected_year}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                type="primary"
+            )
 
     except Exception as e:
         st.error(f"An error occurred: {e}")
