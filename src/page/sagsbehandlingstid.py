@@ -8,7 +8,7 @@ import pandas as pd
 from io import BytesIO
 
 
-def get_byggesager_data():
+def get_sagsbehandlingstid_overview():
     col_1 = st.columns([1])[0]
 
     with col_1:
