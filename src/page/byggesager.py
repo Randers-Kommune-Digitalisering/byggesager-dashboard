@@ -15,8 +15,8 @@ def get_byggesager_overview():
         sac.TabsItem('Antal Modtagne & Afgjorte byggesager', tag='Modtagne & Afgjorte', icon='bi bi-building'),
         sac.TabsItem('Antal Modtagne Byggesager', tag='Modtagne Byggesager', icon='bi bi-building-add'),
         sac.TabsItem('Antal Afgjorte Byggesager', tag='Afgjorte Byggesager', icon='bi bi-building-fill-check'),
-        sac.TabsItem('Antal Afgjorte Byggesager opdelt efter Afgørelsestype', tag='Afgørelsestype', icon='bi bi-buildings'),
         sac.TabsItem('Antal Modtagede Byggesager opdelt efter Type', tag='Type', icon='bi bi-buildings-fill'),
+        sac.TabsItem('Antal Afgjorte Byggesager opdelt efter Afgørelsestype', tag='Afgørelsestype', icon='bi bi-buildings'),
     ], color='dark', size='md', position='top', align='start', use_container_width=True)
 
     try:
@@ -41,8 +41,8 @@ def get_byggesager_overview():
                 df_modtagede["Beslutningstype"] = None
                 df = pd.concat([df_modtagede, df_afgjorte], ignore_index=True)
                 st.session_state.byggesager_data = df
-        df = st.session_state.byggesager_data.copy()
 
+        df = st.session_state.byggesager_data.copy()
         df["Dato"] = pd.to_datetime(df["Dato"], errors='coerce')
         df["År"] = df["Dato"].dt.year.astype(str)
         df["Måned"] = df["Dato"].dt.month
@@ -51,63 +51,120 @@ def get_byggesager_overview():
         df["Antal"] = pd.to_numeric(df["Antal"], errors="coerce")
 
         available_years = sorted(df["År"].unique())
-        selected_year = st.selectbox("Vælg år", available_years, index=len(available_years) - 1)
+        if content_tabs == 'Antal Modtagne & Afgjorte byggesager':
+            available_years.append("Alle år")
+            selected_year = st.selectbox("Vælg år", available_years, index=len(available_years) - 2)
+        else:
+            selected_year = st.selectbox("Vælg år", available_years, index=len(available_years) - 1)
 
         if content_tabs == 'Antal Modtagne & Afgjorte byggesager':
-            chart_df = df[df["År"] == selected_year].dropna(subset=["MånedNavn", "Type", "Antal"])
-            chart_df = chart_df.groupby(["Måned", "MånedNavn", "Type"], as_index=False)["Antal"].sum()
-            month_order = get_month_order()
-            chart_df["MånedNavn"] = pd.Categorical(chart_df["MånedNavn"], categories=month_order, ordered=True)
+            if selected_year == "Alle år":
+                chart_df = df.dropna(subset=["År", "Type", "Antal"])
+                chart_df = chart_df.groupby(["År", "Type"], as_index=False)["Antal"].sum()
+                total_modtagne = int(chart_df[chart_df["Type"] == "Modtagede"]["Antal"].sum())
+                total_afgjorte = int(chart_df[chart_df["Type"] == "Afgjorte"]["Antal"].sum())
 
-            total_modtagne = int(chart_df[chart_df["Type"] == "Modtagede"]["Antal"].sum())
-            total_afgjorte = int(chart_df[chart_df["Type"] == "Afgjorte"]["Antal"].sum())
+                col1, col2 = st.columns([1, 1])
+                with col1:
+                    ui.metric_card(
+                        title="Samlet antal Modtagne byggesager",
+                        content=total_modtagne,
+                        description="Modtagne byggesager (alle år)."
+                    )
+                with col2:
+                    ui.metric_card(
+                        title="Samlet antal Afgjorte byggesager",
+                        content=total_afgjorte,
+                        description="Afgjorte byggesager (alle år)."
+                    )
 
-            col1, col2 = st.columns([1, 1])
-            with col1:
-                ui.metric_card(
-                    title="Samlet antal Modtagne byggesager",
-                    content=total_modtagne,
-                    description=f"Modtagne byggesager i {selected_year}."
+                st.header("Antal modtagne og afgjorte byggesager - Alle år", divider="gray")
+                chart = alt.Chart(chart_df).mark_bar().encode(
+                    x=alt.X('År:N', title='År', sort=available_years[:-1]),
+                    y=alt.Y('Antal:Q', title='Antal byggesager'),
+                    xOffset=alt.XOffset('Type:N', title='Type'),
+                    color=alt.Color('Type:N', title='Type'),
+                    tooltip=[
+                        alt.Tooltip('År:N', title='År'),
+                        alt.Tooltip('Type:N', title='Type'),
+                        alt.Tooltip('Antal:Q', title='Antal')
+                    ]
+                ).properties(width=700, height=400)
+                st.altair_chart(chart, use_container_width=True)
+
+                export_df = chart_df.copy()
+                export_df["Periode"] = export_df["År"].astype(str)
+                export_df = export_df[["Periode", "Type", "Antal"]]
+                export_df["Antal"] = export_df["Antal"].map(lambda x: str(x).replace('.', ','))
+
+                output = BytesIO()
+                with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                    export_df.to_excel(writer, index=False, sheet_name='Modtagne & Afgjorte Byggesager')
+                output.seek(0)
+
+                st.download_button(
+                    label="Eksporter Modtagne & Afgjorte byggesager til Excel",
+                    data=output,
+                    file_name="byggesager_modtagne_afgjorte_alle_år.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    type="primary",
+                    icon=":material/add_chart:"
                 )
-            with col2:
-                ui.metric_card(
-                    title="Samlet antal Afgjorte byggesager",
-                    content=total_afgjorte,
-                    description=f"Afgjorte byggesager i {selected_year}."
+            else:
+                chart_df = df[df["År"] == selected_year].dropna(subset=["MånedNavn", "Type", "Antal"])
+                chart_df = chart_df.groupby(["Måned", "MånedNavn", "Type"], as_index=False)["Antal"].sum()
+                month_order = get_month_order()
+                chart_df["MånedNavn"] = pd.Categorical(chart_df["MånedNavn"], categories=month_order, ordered=True)
+
+                total_modtagne = int(chart_df[chart_df["Type"] == "Modtagede"]["Antal"].sum())
+                total_afgjorte = int(chart_df[chart_df["Type"] == "Afgjorte"]["Antal"].sum())
+
+                col1, col2 = st.columns([1, 1])
+                with col1:
+                    ui.metric_card(
+                        title="Samlet antal Modtagne byggesager",
+                        content=total_modtagne,
+                        description=f"Modtagne byggesager i {selected_year}."
+                    )
+                with col2:
+                    ui.metric_card(
+                        title="Samlet antal Afgjorte byggesager",
+                        content=total_afgjorte,
+                        description=f"Afgjorte byggesager i {selected_year}."
+                    )
+
+                st.header(f"Antal modtagne og afgjorte byggesager - {selected_year}", divider="gray")
+                chart = alt.Chart(chart_df).mark_bar().encode(
+                    x=alt.X('MånedNavn:N', title='Måned', sort=month_order),
+                    y=alt.Y('Antal:Q', title='Antal byggesager'),
+                    xOffset=alt.XOffset('Type:N', title='Type'),
+                    color=alt.Color('Type:N', title='Type'),
+                    tooltip=[
+                        alt.Tooltip('MånedNavn:N', title='Måned'),
+                        alt.Tooltip('Type:N', title='Type'),
+                        alt.Tooltip('Antal:Q', title='Antal')
+                    ]
+                ).properties(width=700, height=400)
+                st.altair_chart(chart, use_container_width=True)
+
+                export_df = chart_df.copy()
+                export_df["Periode"] = export_df["MånedNavn"].astype(str) + " " + selected_year
+                export_df = export_df[["Periode", "Type", "Antal"]]
+                export_df["Antal"] = export_df["Antal"].map(lambda x: str(x).replace('.', ','))
+
+                output = BytesIO()
+                with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                    export_df.to_excel(writer, index=False, sheet_name='Modtagne & Afgjorte Byggesager')
+                output.seek(0)
+
+                st.download_button(
+                    label="Eksporter Modtagne & Afgjorte byggesager til Excel",
+                    data=output,
+                    file_name=f"byggesager_modtagne_afgjorte_{selected_year}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    type="primary",
+                    icon=":material/add_chart:"
                 )
-
-            st.header(f"Antal modtagne og afgjorte byggesager - {selected_year}", divider="gray")
-            chart = alt.Chart(chart_df).mark_bar().encode(
-                x=alt.X('MånedNavn:N', title='Måned', sort=month_order),
-                y=alt.Y('Antal:Q', title='Antal byggesager'),
-                xOffset=alt.XOffset('Type:N', title='Type'),
-                color=alt.Color('Type:N', title='Type'),
-                tooltip=[
-                    alt.Tooltip('MånedNavn:N', title='Måned'),
-                    alt.Tooltip('Type:N', title='Type'),
-                    alt.Tooltip('Antal:Q', title='Antal')
-                ]
-            ).properties(width=700, height=400)
-            st.altair_chart(chart, use_container_width=True)
-
-            export_df = chart_df.copy()
-            export_df["Periode"] = export_df["MånedNavn"].astype(str) + " " + selected_year
-            export_df = export_df[["Periode", "Type", "Antal"]]
-            export_df["Antal"] = export_df["Antal"].map(lambda x: str(x).replace('.', ','))
-
-            output = BytesIO()
-            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                export_df.to_excel(writer, index=False, sheet_name='Modtagne & Afgjorte Byggesager')
-            output.seek(0)
-
-            st.download_button(
-                label="Eksporter Modtagne & Afgjorte byggesager til Excel",
-                data=output,
-                file_name=f"byggesager_modtagne_afgjorte_{selected_year}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                type="primary",
-                icon=":material/add_chart:"
-            )
 
         elif content_tabs == 'Antal Modtagne Byggesager':
             modtagne_df = df[(df["År"] == selected_year) & (df["Type"] == "Modtagede")].dropna(subset=["MånedNavn", "Antal"])
