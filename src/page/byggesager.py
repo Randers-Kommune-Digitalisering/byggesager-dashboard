@@ -3,6 +3,7 @@ import pandas as pd
 import altair as alt
 from io import BytesIO
 from utils.database_connection import get_byggesager_db
+from utils.byggesager_data import get_month_map, get_month_order
 import streamlit_antd_components as sac
 import streamlit_shadcn_ui as ui
 
@@ -45,10 +46,7 @@ def get_byggesager_overview():
         df["Dato"] = pd.to_datetime(df["Dato"], errors='coerce')
         df["År"] = df["Dato"].dt.year.astype(str)
         df["Måned"] = df["Dato"].dt.month
-        month_map = {
-            1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "Maj", 6: "Jun",
-            7: "Jul", 8: "Aug", 9: "Sep", 10: "Okt", 11: "Nov", 12: "Dec"
-        }
+        month_map = get_month_map()
         df["MånedNavn"] = df["Måned"].map(month_map)
         df["Antal"] = pd.to_numeric(df["Antal"], errors="coerce")
 
@@ -58,7 +56,7 @@ def get_byggesager_overview():
         if content_tabs == 'Antal Modtagne & Afgjorte byggesager':
             chart_df = df[df["År"] == selected_year].dropna(subset=["MånedNavn", "Type", "Antal"])
             chart_df = chart_df.groupby(["Måned", "MånedNavn", "Type"], as_index=False)["Antal"].sum()
-            month_order = ["Jan", "Feb", "Mar", "Apr", "Maj", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"]
+            month_order = get_month_order()
             chart_df["MånedNavn"] = pd.Categorical(chart_df["MånedNavn"], categories=month_order, ordered=True)
 
             total_modtagne = int(chart_df[chart_df["Type"] == "Modtagede"]["Antal"].sum())
@@ -114,7 +112,7 @@ def get_byggesager_overview():
         elif content_tabs == 'Antal Modtagne Byggesager':
             modtagne_df = df[(df["År"] == selected_year) & (df["Type"] == "Modtagede")].dropna(subset=["MånedNavn", "Antal"])
             modtagne_df = modtagne_df.groupby(["Måned", "MånedNavn"], as_index=False)["Antal"].sum()
-            month_order = ["Jan", "Feb", "Mar", "Apr", "Maj", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"]
+            month_order = get_month_order()
             modtagne_df["MånedNavn"] = pd.Categorical(modtagne_df["MånedNavn"], categories=month_order, ordered=True)
 
             total_modtagne = int(modtagne_df["Antal"].sum())
@@ -159,7 +157,7 @@ def get_byggesager_overview():
         elif content_tabs == 'Antal Afgjorte Byggesager':
             afgjorte_df = df[(df["År"] == selected_year) & (df["Type"] == "Afgjorte")].dropna(subset=["MånedNavn", "Antal"])
             afgjorte_df = afgjorte_df.groupby(["Måned", "MånedNavn"], as_index=False)["Antal"].sum()
-            month_order = ["Jan", "Feb", "Mar", "Apr", "Maj", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"]
+            month_order = get_month_order()
             afgjorte_df["MånedNavn"] = pd.Categorical(afgjorte_df["MånedNavn"], categories=month_order, ordered=True)
 
             total_afgjorte = int(afgjorte_df["Antal"].sum())
@@ -204,7 +202,7 @@ def get_byggesager_overview():
         elif content_tabs == 'Antal Afgjorte Byggesager opdelt efter Afgørelsestype':
             afgjorte_type_df = df[(df["År"] == selected_year) & (df["Type"] == "Afgjorte")].dropna(subset=["MånedNavn", "Beslutningstype", "Antal"])
             afgjorte_type_df = afgjorte_type_df.groupby(["Måned", "MånedNavn", "Beslutningstype"], as_index=False)["Antal"].sum()
-            month_order = ["Jan", "Feb", "Mar", "Apr", "Maj", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"]
+            month_order = get_month_order()
             afgjorte_type_df["MånedNavn"] = pd.Categorical(afgjorte_type_df["MånedNavn"], categories=month_order, ordered=True)
 
             st.header(f"Antal Afgjorte Byggesager opdelt efter Afgørelsestype - {selected_year}", divider="gray")
@@ -242,7 +240,7 @@ def get_byggesager_overview():
         elif content_tabs == 'Antal Modtagede Byggesager opdelt efter Type':
             modtagede_type_df = df[(df["År"] == selected_year) & (df["Type"] == "Modtagede")].dropna(subset=["MånedNavn", "Gruppering", "Antal"])
             modtagede_type_df = modtagede_type_df.groupby(["Måned", "MånedNavn", "Gruppering"], as_index=False)["Antal"].sum()
-            month_order = ["Jan", "Feb", "Mar", "Apr", "Maj", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"]
+            month_order = get_month_order()
             modtagede_type_df["MånedNavn"] = pd.Categorical(modtagede_type_df["MånedNavn"], categories=month_order, ordered=True)
 
             st.header(f"Antal Modtagede Byggesager opdelt efter Type - {selected_year}", divider="gray")
