@@ -4,6 +4,7 @@ import altair as alt
 from io import BytesIO
 from utils.database_connection import get_byggesager_db
 import streamlit_antd_components as sac
+import streamlit_shadcn_ui as ui
 
 db_client = get_byggesager_db()
 
@@ -60,6 +61,23 @@ def get_byggesager_overview():
             month_order = ["Jan", "Feb", "Mar", "Apr", "Maj", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"]
             chart_df["MånedNavn"] = pd.Categorical(chart_df["MånedNavn"], categories=month_order, ordered=True)
 
+            total_modtagne = int(chart_df[chart_df["Type"] == "Modtagede"]["Antal"].sum())
+            total_afgjorte = int(chart_df[chart_df["Type"] == "Afgjorte"]["Antal"].sum())
+
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                ui.metric_card(
+                    title="Samlet antal Modtagne byggesager",
+                    content=total_modtagne,
+                    description=f"Modtagne byggesager i {selected_year}."
+                )
+            with col2:
+                ui.metric_card(
+                    title="Samlet antal Afgjorte byggesager",
+                    content=total_afgjorte,
+                    description=f"Afgjorte byggesager i {selected_year}."
+                )
+
             st.header(f"Antal modtagne og afgjorte byggesager - {selected_year}", divider="gray")
             chart = alt.Chart(chart_df).mark_bar().encode(
                 x=alt.X('MånedNavn:N', title='Måned', sort=month_order),
@@ -99,6 +117,15 @@ def get_byggesager_overview():
             month_order = ["Jan", "Feb", "Mar", "Apr", "Maj", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"]
             modtagne_df["MånedNavn"] = pd.Categorical(modtagne_df["MånedNavn"], categories=month_order, ordered=True)
 
+            total_modtagne = int(modtagne_df["Antal"].sum())
+            col1, = st.columns([1])
+            with col1:
+                ui.metric_card(
+                    title="Samlet antal Modtagne byggesager",
+                    content=total_modtagne,
+                    description=f"Modtagne byggesager i {selected_year}."
+                )
+
             st.header(f"Antal Modtagne Byggesager - {selected_year}", divider="gray")
             chart = alt.Chart(modtagne_df).mark_bar().encode(
                 x=alt.X('MånedNavn:N', title='Måned', sort=month_order),
@@ -134,6 +161,15 @@ def get_byggesager_overview():
             afgjorte_df = afgjorte_df.groupby(["Måned", "MånedNavn"], as_index=False)["Antal"].sum()
             month_order = ["Jan", "Feb", "Mar", "Apr", "Maj", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"]
             afgjorte_df["MånedNavn"] = pd.Categorical(afgjorte_df["MånedNavn"], categories=month_order, ordered=True)
+
+            total_afgjorte = int(afgjorte_df["Antal"].sum())
+            col1, = st.columns([1])
+            with col1:
+                ui.metric_card(
+                    title="Samlet antal Afgjorte byggesager",
+                    content=total_afgjorte,
+                    description=f"Afgjorte byggesager i {selected_year}."
+                )
 
             st.header(f"Antal Afgjorte Byggesager - {selected_year}", divider="gray")
             chart = alt.Chart(afgjorte_df).mark_bar().encode(
