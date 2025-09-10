@@ -1,8 +1,9 @@
 import streamlit as st
 from utils.logo import get_logo
 from streamlit_option_menu import option_menu
-from page.sagsbehandlingstid import get_byggesager_data
+from page.sagsbehandlingstid import get_sagsbehandlingstid_overview
 from page.byggesager import get_byggesager_overview
+from page.landzone import get_landzonesager_overview
 
 st.set_page_config(page_title="Byggesager", page_icon="assets/favicon.ico", layout="wide")
 
@@ -10,7 +11,7 @@ with st.sidebar:
     st.sidebar.markdown(get_logo(), unsafe_allow_html=True)
     selected = option_menu(
         "Byggesager",
-        ["Sagsbehandlingstid", "Byggesager"],
+        ["Sagsbehandlingstid", "Byggesager", "Landzonesager"],
         icons=['bi bi-building-fill-gear', 'bi bi-building'],
         menu_icon="bi bi-building",
         default_index=0,
@@ -24,6 +25,8 @@ with st.sidebar:
     )
 
 if selected == "Sagsbehandlingstid":
-    get_byggesager_data()
+    get_sagsbehandlingstid_overview()
 elif selected == "Byggesager":
     get_byggesager_overview()
+elif selected == "Landzonesager":
+    get_landzonesager_overview()
