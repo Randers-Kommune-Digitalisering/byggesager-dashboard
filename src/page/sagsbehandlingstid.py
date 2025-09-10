@@ -104,6 +104,13 @@ def get_sagsbehandlingstid_overview():
             output = BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                 export_df.to_excel(writer, index=False, sheet_name='Servicemålprocent')
+                worksheet = writer.sheets['Servicemålprocent']
+                for i, col in enumerate(export_df.columns):
+                    max_len = max(
+                        export_df[col].astype(str).map(len).max(),
+                        len(col)
+                    ) + 2
+                    worksheet.set_column(i, i, max_len)
             output.seek(0)
 
             st.download_button(
@@ -183,6 +190,13 @@ def get_sagsbehandlingstid_overview():
             output = BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                 export_df.to_excel(writer, index=False, sheet_name='Sagsbehandlingstid')
+                worksheet = writer.sheets['Sagsbehandlingstid']
+                for i, col in enumerate(export_df.columns):
+                    max_len = max(
+                        export_df[col].astype(str).map(len).max(),
+                        len(col)
+                    ) + 2
+                    worksheet.set_column(i, i, max_len)
             output.seek(0)
 
             st.download_button(

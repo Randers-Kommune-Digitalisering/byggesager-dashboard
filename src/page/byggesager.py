@@ -100,6 +100,13 @@ def get_byggesager_overview():
                 output = BytesIO()
                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                     export_df.to_excel(writer, index=False, sheet_name='Modtagne & Afgjorte Byggesager')
+                    worksheet = writer.sheets['Modtagne & Afgjorte Byggesager']
+                for i, col in enumerate(export_df.columns):
+                    max_len = max(
+                        export_df[col].astype(str).map(len).max(),
+                        len(col)
+                    ) + 2
+                    worksheet.set_column(i, i, max_len)
                 output.seek(0)
 
                 st.download_button(
@@ -155,6 +162,13 @@ def get_byggesager_overview():
                 output = BytesIO()
                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                     export_df.to_excel(writer, index=False, sheet_name='Modtagne & Afgjorte Byggesager')
+                    worksheet = writer.sheets['Modtagne & Afgjorte Byggesager']
+                for i, col in enumerate(export_df.columns):
+                    max_len = max(
+                        export_df[col].astype(str).map(len).max(),
+                        len(col)
+                    ) + 2
+                    worksheet.set_column(i, i, max_len)
                 output.seek(0)
 
                 st.download_button(
@@ -200,6 +214,13 @@ def get_byggesager_overview():
             output = BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                 export_df.to_excel(writer, index=False, sheet_name='Modtagne')
+                worksheet = writer.sheets['Modtagne']
+                for i, col in enumerate(export_df.columns):
+                    max_len = max(
+                        export_df[col].astype(str).map(len).max(),
+                        len(col)
+                    ) + 2
+                    worksheet.set_column(i, i, max_len)
             output.seek(0)
 
             st.download_button(
@@ -245,6 +266,13 @@ def get_byggesager_overview():
             output = BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                 export_df.to_excel(writer, index=False, sheet_name='Afgjorte')
+                worksheet = writer.sheets['Afgjorte']
+                for i, col in enumerate(export_df.columns):
+                    max_len = max(
+                        export_df[col].astype(str).map(len).max(),
+                        len(col)
+                    ) + 2
+                    worksheet.set_column(i, i, max_len)
             output.seek(0)
 
             st.download_button(
@@ -283,6 +311,13 @@ def get_byggesager_overview():
             output = BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                 export_df.to_excel(writer, index=False, sheet_name='Afgørelsestype')
+                worksheet = writer.sheets['Afgørelsestype']
+                for i, col in enumerate(export_df.columns):
+                    max_len = max(
+                        export_df[col].astype(str).map(len).max(),
+                        len(col)
+                    ) + 2
+                    worksheet.set_column(i, i, max_len)
             output.seek(0)
 
             st.download_button(
@@ -321,6 +356,13 @@ def get_byggesager_overview():
             output = BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                 export_df.to_excel(writer, index=False, sheet_name='Type')
+                worksheet = writer.sheets['Type']
+                for i, col in enumerate(export_df.columns):
+                    max_len = max(
+                        export_df[col].astype(str).map(len).max(),
+                        len(col)
+                    ) + 2
+                    worksheet.set_column(i, i, max_len)
             output.seek(0)
 
             st.download_button(
