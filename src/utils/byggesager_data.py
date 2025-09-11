@@ -41,3 +41,14 @@ def get_categories():
         "Etagebyggeri, Erhverv (byg)",
         "Etagebyggeri, Boliger (byg)"
     ]
+
+
+def get_month_map():
+    return {
+        1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "Maj", 6: "Jun",
+        7: "Jul", 8: "Aug", 9: "Sep", 10: "Okt", 11: "Nov", 12: "Dec"
+    }
+
+
+def get_month_order():
+    return ["Jan", "Feb", "Mar", "Apr", "Maj", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"]
