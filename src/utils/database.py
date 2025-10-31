@@ -3,6 +3,9 @@ import logging
 import pymssql
 import psycopg2
 
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
+
 
 class DatabaseClient:
     def __init__(self, database, username, password, host, port, db_type='postgresql'):
@@ -16,6 +19,7 @@ class DatabaseClient:
 
         self.connection = None
         self.cursor = None
+        self.engine = None
 
     def get_connection(self):
         try:
@@ -69,3 +73,20 @@ class DatabaseClient:
         if self.cursor:
             self.cursor.close()
             self.cursor = None
+
+    def get_sqlalchemy_session(self):
+        try:
+            if not self.engine:
+                if self.db_type == 'mssql':
+                    conn_str = f"mssql+pymssql://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}"
+                elif self.db_type == 'mysql':
+                    conn_str = f"mysql+pymysql://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}"
+                elif self.db_type == 'postgresql':
+                    conn_str = f"postgresql+psycopg2://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}"
+                else:
+                    raise ValueError(f"Unsupported database type: {self.db_type}")
+                self.engine = create_engine(conn_str)
+            return Session(bind=self.engine)
+        except Exception as e:
+            self.logger.error(f"Error creating SQLAlchemy session: {e}")
+            return None
