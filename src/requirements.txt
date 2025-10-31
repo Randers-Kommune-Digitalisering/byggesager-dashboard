@@ -1,6 +1,7 @@
 Flask==3.0.3
 mariadb
 pandas
+paramiko==3.4.0
 pymssql
 py-healthcheck
 pysftp
