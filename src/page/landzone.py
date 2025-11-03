@@ -286,7 +286,7 @@ def get_landzonesager_overview():
 
             export_df = grouped_df.copy()
             export_df["Periode"] = export_df["MånedNavn"].astype(str) + " " + str(selected_year)
-            export_df = export_df[["Periode", "Gruppering", "Antal"]]
+            export_df = export_df[["Periode", "Ansøgningstype", "Antal"]]
             export_df["Antal"] = export_df["Antal"].map(lambda x: str(x).replace('.', ','))
 
             output = BytesIO()
