@@ -77,7 +77,7 @@ def get_afgjorte_byggesager(grupper: list[str], start_year: int, end_year: int =
                 extract('month', source_model.byggetilladelse_date).label('Måned'),
                 Byggesagsgruppe.name.label('Gruppering'),
                 Beslutningstype.name.label('Beslutningstype'),
-                func.count(source_model.id)) \
+                func.count(source_model.id).label('Antal')) \
                 .select_from(source_model) \
                 .join(Byggesagskode, source_model.byggesagskode_id == Byggesagskode.id) \
                 .join(Byggesagsgruppe, Byggesagsgruppe.id == Byggesagskode.byggesagsgruppe_id) \
