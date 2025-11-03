@@ -266,7 +266,6 @@ def get_landzonesager_overview():
             )
 
         elif content_tabs == 'Antal Modtagne landzonesager opdelt efter Ansøgningstype':
-            st.write(df.head())
             filtered_df = df[(df["År"] == selected_year) & (df["Type"] == "Modtagede")].dropna(subset=["MånedNavn", "Ansøgningstype", "Antal"])
             grouped_df = filtered_df.groupby(["Måned", "MånedNavn", "Ansøgningstype"], as_index=False)["Antal"].sum()
             month_order = get_month_order()
