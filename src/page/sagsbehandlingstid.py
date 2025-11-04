@@ -91,7 +91,7 @@ def get_sagsbehandlingstid_overview():
                 height=400
             )
 
-            st.altair_chart(dual_axis_chart, use_container_width=True)
+            st.altair_chart(dual_axis_chart, width="stretch")
 
             export_df = category_data.copy()
             export_df["Periode"] = export_df["Måned"].astype(str) + " " + export_df["Year"].astype(str)
@@ -177,7 +177,7 @@ def get_sagsbehandlingstid_overview():
                 height=400
             )
 
-            st.altair_chart(dual_axis_chart, use_container_width=True)
+            st.altair_chart(dual_axis_chart, width="stretch")
 
             export_df = category_data.copy()
             export_df["Periode"] = export_df["Måned"].astype(str) + " " + export_df["Year"].astype(str)
