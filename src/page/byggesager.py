@@ -83,7 +83,7 @@ def get_byggesager_overview():
 
             st.header("Antal modtagne og afgjorte byggesager - Alle år", divider="gray")
             chart = alt.Chart(chart_df).mark_bar().encode(
-                x=alt.X('År:N', title='År', sort=available_years[:-1]),
+                x=alt.X('År:N', title='År'),
                 y=alt.Y('Antal:Q', title='Antal byggesager'),
                 xOffset=alt.XOffset('Type:N', title='Type'),
                 color=alt.Color('Type:N', title='Type'),
@@ -93,7 +93,7 @@ def get_byggesager_overview():
                     alt.Tooltip('Antal:Q', title='Antal')
                 ]
             ).properties(width=700, height=400)
-            st.altair_chart(chart, use_container_width=True)
+            st.altair_chart(chart, width="stretch")
 
             export_df = chart_df.copy()
             export_df["Periode"] = export_df["År"].astype(str)
@@ -155,7 +155,7 @@ def get_byggesager_overview():
                     alt.Tooltip('Antal:Q', title='Antal')
                 ]
             ).properties(width=700, height=400)
-            st.altair_chart(chart, use_container_width=True)
+            st.altair_chart(chart, width="stretch")
 
             export_df = chart_df.copy()
             export_df["Periode"] = export_df["MånedNavn"].astype(str) + " " + str(selected_year)
@@ -202,7 +202,7 @@ def get_byggesager_overview():
         st.header(f"Antal Modtagne Byggesager - {selected_year}", divider="gray")
 
         chart = sag_count_bar_chart_with_lines(modtagne_df, selected_year)
-        st.altair_chart(chart.properties(width=700, height=400), use_container_width=True)
+        st.altair_chart(chart.properties(width=700, height=400), width="stretch")
 
         export_df = modtagne_df.copy()
         export_df["Periode"] = export_df["MånedNavn"].astype(str) + " " + str(selected_year)
@@ -248,7 +248,7 @@ def get_byggesager_overview():
         st.header(f"Antal Afgjorte Byggesager - {selected_year}", divider="gray")
 
         chart = sag_count_bar_chart_with_lines(afgjorte_df, selected_year)
-        st.altair_chart(chart.properties(width=700, height=400), use_container_width=True)
+        st.altair_chart(chart.properties(width=700, height=400), width="stretch")
 
         export_df = afgjorte_df.copy()
         export_df["Periode"] = export_df["MånedNavn"].astype(str) + " " + str(selected_year)
@@ -293,7 +293,7 @@ def get_byggesager_overview():
                 alt.Tooltip("Antal:Q", title="Antal")
             ]
         ).properties(width=700, height=400)
-        st.altair_chart(chart, use_container_width=True)
+        st.altair_chart(chart, width="stretch")
 
         export_df = afgjorte_type_df.copy()
         export_df["Periode"] = export_df["MånedNavn"].astype(str) + " " + str(selected_year)
@@ -338,7 +338,7 @@ def get_byggesager_overview():
                 alt.Tooltip("Antal:Q", title="Antal")
             ]
         ).properties(width=700, height=400)
-        st.altair_chart(chart, use_container_width=True)
+        st.altair_chart(chart, width="stretch")
 
         export_df = modtagede_type_df.copy()
         export_df["Periode"] = export_df["MånedNavn"].astype(str) + " " + str(selected_year)

@@ -16,7 +16,7 @@ def get_landzonesager_overview():
         sac.TabsItem('Antal Modtagne Landzonesager', tag='Modtagne Landzonesager', icon='bi bi-building-add'),
         sac.TabsItem('Antal Afgjorte Landzonesager', tag='Afgjorte Landzonesager', icon='bi bi-building-fill-check'),
         sac.TabsItem('Antal Modtagne landzonesager opdelt efter Ansøgningstype', tag='Ansøgningstype', icon='bi bi-buildings-fill'),
-        sac.TabsItem('Antal Afgjorte Landzonesager opdelt efter Type', tag='Type', icon='bi bi-buildings'),
+        sac.TabsItem('Antal Afgjorte Landzonesager opdelt efter Afgørelsestype', tag='Type', icon='bi bi-buildings'),
     ], color='dark', size='md', position='top', align='start', use_container_width=True)
 
     try:
@@ -73,7 +73,7 @@ def get_landzonesager_overview():
 
                 st.header("Antal modtagne og afgjorte landzonesager - Alle år", divider="gray")
                 chart = alt.Chart(samlet_df).mark_bar().encode(
-                    x=alt.X("År:N", title="År", sort=available_years[:-1]),
+                    x=alt.X("År:N", title="År"),
                     y=alt.Y("Antal:Q", title="Antal landzonesager"),
                     xOffset=alt.XOffset("Type:N", title="Type"),
                     color=alt.Color("Type:N", title="Type"),
@@ -83,7 +83,7 @@ def get_landzonesager_overview():
                         alt.Tooltip("Antal:Q", title="Antal")
                     ]
                 ).properties(width=700, height=400)
-                st.altair_chart(chart, use_container_width=True)
+                st.altair_chart(chart, width="stretch")
 
                 export_df = samlet_df.copy()
                 export_df["Periode"] = export_df["År"].astype(str)
@@ -145,7 +145,7 @@ def get_landzonesager_overview():
                         alt.Tooltip("Antal:Q", title="Antal")
                     ]
                 ).properties(width=700, height=400)
-                st.altair_chart(chart, use_container_width=True)
+                st.altair_chart(chart, width="stretch")
 
                 export_df = samlet_df.copy()
                 export_df["Periode"] = export_df["MånedNavn"].astype(str) + " " + str(selected_year)
@@ -191,7 +191,7 @@ def get_landzonesager_overview():
             st.header(f"Antal Modtagne Landzonesager - {selected_year}", divider="gray")
 
             chart = sag_count_bar_chart_with_lines(modtagne_df, selected_year)
-            st.altair_chart(chart.properties(width=700, height=400), use_container_width=True)
+            st.altair_chart(chart.properties(width=700, height=400), width="stretch")
 
             export_df = modtagne_df.copy()
             export_df["Periode"] = export_df["MånedNavn"].astype(str) + " " + str(selected_year)
@@ -237,7 +237,7 @@ def get_landzonesager_overview():
             st.header(f"Antal afgjorte landzonesager - {selected_year}", divider="gray")
 
             chart = sag_count_bar_chart_with_lines(afgjorte_df, selected_year)
-            st.altair_chart(chart.properties(width=700, height=400), use_container_width=True)
+            st.altair_chart(chart.properties(width=700, height=400), width="stretch")
 
             export_df = afgjorte_df.copy()
             export_df["Periode"] = export_df["MånedNavn"].astype(str) + " " + str(selected_year)
@@ -282,7 +282,7 @@ def get_landzonesager_overview():
                     alt.Tooltip("Antal:Q", title="Antal")
                 ]
             ).properties(width=700, height=400)
-            st.altair_chart(chart, use_container_width=True)
+            st.altair_chart(chart, width="stretch")
 
             export_df = grouped_df.copy()
             export_df["Periode"] = export_df["MånedNavn"].astype(str) + " " + str(selected_year)
@@ -316,7 +316,7 @@ def get_landzonesager_overview():
             month_order = get_month_order()
             grouped_df["MånedNavn"] = pd.Categorical(grouped_df["MånedNavn"], categories=month_order, ordered=True)
 
-            st.header(f"Antal Afgjorte Landzonesager opdelt efter Type - {selected_year}", divider="gray")
+            st.header(f"Antal Afgjorte Landzonesager opdelt efter Afgørelsestype - {selected_year}", divider="gray")
             chart = alt.Chart(grouped_df).mark_bar().encode(
                 x=alt.X("MånedNavn:N", title="Måned", sort=month_order),
                 y=alt.Y("Antal:Q", title="Antal"),
@@ -327,7 +327,7 @@ def get_landzonesager_overview():
                     alt.Tooltip("Antal:Q", title="Antal")
                 ]
             ).properties(width=700, height=400)
-            st.altair_chart(chart, use_container_width=True)
+            st.altair_chart(chart, width="stretch")
 
             export_df = grouped_df.copy()
             export_df["Periode"] = export_df["MånedNavn"].astype(str) + " " + str(selected_year)
