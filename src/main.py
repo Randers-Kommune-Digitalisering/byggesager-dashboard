@@ -12,7 +12,7 @@ with st.sidebar:
     selected = option_menu(
         "Byggesager",
         ["Sagsbehandlingstid", "Byggesager", "Landzonesager"],
-        icons=['bi bi-building-fill-gear', 'bi bi-building'],
+        icons=['bi bi-building-fill-gear', 'bi bi-building', 'bi bi-building-gear'],
         menu_icon="bi bi-building",
         default_index=0,
         styles={
