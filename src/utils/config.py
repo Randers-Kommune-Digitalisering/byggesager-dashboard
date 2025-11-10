@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+CASE_TYPE_ORDER = ["Modtagede", "Afgjorte"]
+
 DEBUG = os.getenv('DEBUG', 'False') in ['True', 'true']
 PORT = os.getenv('PORT', '8080')
 POD_NAME = os.getenv('POD_NAME', 'pod_name_not_set')
