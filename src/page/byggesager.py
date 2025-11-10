@@ -67,6 +67,8 @@ def get_byggesager_overview():
             total_modtagne = int(chart_df[chart_df["Type"] == "Modtagede"]["Antal"].sum())
             total_afgjorte = int(chart_df[chart_df["Type"] == "Afgjorte"]["Antal"].sum())
 
+            type_order = list(chart_df["Type"].unique())[::-1]
+
             col1, col2 = st.columns([1, 1])
             with col1:
                 ui.metric_card(
@@ -85,10 +87,10 @@ def get_byggesager_overview():
             chart = alt.Chart(chart_df).mark_bar().encode(
                 x=alt.X('År:N', title='År'),
                 y=alt.Y('Antal:Q', title='Antal byggesager'),
-                xOffset=alt.XOffset('Type:N', title='Type'),
-                color=alt.Color('Type:N', title='Type'),
+                xOffset=alt.XOffset('Type:N', title='Type', sort=type_order),
+                color=alt.Color('Type:N', title='Type', sort=type_order),
                 tooltip=[
-                    alt.Tooltip('År:N', title='År'),
+                    alt.Tooltip('År:Q', title='År'),
                     alt.Tooltip('Type:N', title='Type'),
                     alt.Tooltip('Antal:Q', title='Antal')
                 ]
@@ -129,6 +131,8 @@ def get_byggesager_overview():
             total_modtagne = int(chart_df[chart_df["Type"] == "Modtagede"]["Antal"].sum())
             total_afgjorte = int(chart_df[chart_df["Type"] == "Afgjorte"]["Antal"].sum())
 
+            type_order = list(chart_df["Type"].unique())[::-1]
+
             col1, col2 = st.columns([1, 1])
             with col1:
                 ui.metric_card(
@@ -147,8 +151,8 @@ def get_byggesager_overview():
             chart = alt.Chart(chart_df).mark_bar().encode(
                 x=alt.X('MånedNavn:N', title='Måned', sort=month_order),
                 y=alt.Y('Antal:Q', title='Antal byggesager'),
-                xOffset=alt.XOffset('Type:N', title='Type'),
-                color=alt.Color('Type:N', title='Type'),
+                xOffset=alt.XOffset('Type:N', title='Type', sort=type_order),
+                color=alt.Color('Type:N', title='Type', sort=type_order),
                 tooltip=[
                     alt.Tooltip('MånedNavn:N', title='Måned'),
                     alt.Tooltip('Type:N', title='Type'),

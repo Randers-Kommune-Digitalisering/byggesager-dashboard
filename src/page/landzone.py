@@ -57,6 +57,8 @@ def get_landzonesager_overview():
                 total_modtagne = int(samlet_df[samlet_df["Type"] == "Modtagede"]["Antal"].sum())
                 total_afgjorte = int(samlet_df[samlet_df["Type"] == "Afgjorte"]["Antal"].sum())
 
+                type_order = list(samlet_df["Type"].unique())[::-1]
+
                 col1, col2 = st.columns([1, 1])
                 with col1:
                     ui.metric_card(
@@ -75,10 +77,10 @@ def get_landzonesager_overview():
                 chart = alt.Chart(samlet_df).mark_bar().encode(
                     x=alt.X("År:N", title="År"),
                     y=alt.Y("Antal:Q", title="Antal landzonesager"),
-                    xOffset=alt.XOffset("Type:N", title="Type"),
-                    color=alt.Color("Type:N", title="Type"),
+                    xOffset=alt.XOffset("Type:N", title="Type", sort=type_order),
+                    color=alt.Color("Type:N", title="Type", sort=type_order),
                     tooltip=[
-                        alt.Tooltip("År:N", title="År"),
+                        alt.Tooltip("År:Q", title="År"),
                         alt.Tooltip("Type:N", title="Type"),
                         alt.Tooltip("Antal:Q", title="Antal")
                     ]
@@ -119,6 +121,8 @@ def get_landzonesager_overview():
                 total_modtagne = int(samlet_df[samlet_df["Type"] == "Modtagede"]["Antal"].sum())
                 total_afgjorte = int(samlet_df[samlet_df["Type"] == "Afgjorte"]["Antal"].sum())
 
+                type_order = list(samlet_df["Type"].unique())[::-1]
+
                 col1, col2 = st.columns([1, 1])
                 with col1:
                     ui.metric_card(
@@ -137,8 +141,8 @@ def get_landzonesager_overview():
                 chart = alt.Chart(samlet_df).mark_bar().encode(
                     x=alt.X("MånedNavn:N", title="Måned", sort=month_order),
                     y=alt.Y("Antal:Q", title="Antal landzonesager"),
-                    xOffset=alt.XOffset("Type:N", title="Type"),
-                    color=alt.Color("Type:N", title="Type"),
+                    xOffset=alt.XOffset("Type:N", title="Type", sort=type_order),
+                    color=alt.Color("Type:N", title="Type", sort=type_order),
                     tooltip=[
                         alt.Tooltip("MånedNavn:N", title="Måned"),
                         alt.Tooltip("Type:N", title="Type"),
