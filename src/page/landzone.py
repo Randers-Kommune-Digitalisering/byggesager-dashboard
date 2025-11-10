@@ -57,7 +57,7 @@ def get_landzonesager_overview():
                 total_modtagne = int(samlet_df[samlet_df["Type"] == "Modtagede"]["Antal"].sum())
                 total_afgjorte = int(samlet_df[samlet_df["Type"] == "Afgjorte"]["Antal"].sum())
 
-                type_order = list(samlet_df["Type"].unique())[::-1]
+                type_order = ["Modtagede", "Afgjorte"]
 
                 col1, col2 = st.columns([1, 1])
                 with col1:
@@ -121,7 +121,7 @@ def get_landzonesager_overview():
                 total_modtagne = int(samlet_df[samlet_df["Type"] == "Modtagede"]["Antal"].sum())
                 total_afgjorte = int(samlet_df[samlet_df["Type"] == "Afgjorte"]["Antal"].sum())
 
-                type_order = list(samlet_df["Type"].unique())[::-1]
+                type_order = ["Modtagede", "Afgjorte"]
 
                 col1, col2 = st.columns([1, 1])
                 with col1:

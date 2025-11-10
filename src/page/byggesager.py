@@ -67,7 +67,7 @@ def get_byggesager_overview():
             total_modtagne = int(chart_df[chart_df["Type"] == "Modtagede"]["Antal"].sum())
             total_afgjorte = int(chart_df[chart_df["Type"] == "Afgjorte"]["Antal"].sum())
 
-            type_order = list(chart_df["Type"].unique())[::-1]
+            type_order = ["Modtagede", "Afgjorte"]
 
             col1, col2 = st.columns([1, 1])
             with col1:
@@ -131,7 +131,7 @@ def get_byggesager_overview():
             total_modtagne = int(chart_df[chart_df["Type"] == "Modtagede"]["Antal"].sum())
             total_afgjorte = int(chart_df[chart_df["Type"] == "Afgjorte"]["Antal"].sum())
 
-            type_order = list(chart_df["Type"].unique())[::-1]
+            type_order = ["Modtagede", "Afgjorte"]
 
             col1, col2 = st.columns([1, 1])
             with col1:
