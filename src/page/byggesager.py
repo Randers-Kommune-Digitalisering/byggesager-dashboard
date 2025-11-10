@@ -8,6 +8,7 @@ from io import BytesIO
 
 from utils.byggesager_data import get_month_map, get_month_order
 from utils.chart import sag_count_bar_chart_with_lines
+from utils.config import CASE_TYPE_ORDER
 from data import get_modtagne_byggesager, get_afgjorte_byggesager
 
 
@@ -85,10 +86,10 @@ def get_byggesager_overview():
             chart = alt.Chart(chart_df).mark_bar().encode(
                 x=alt.X('År:N', title='År'),
                 y=alt.Y('Antal:Q', title='Antal byggesager'),
-                xOffset=alt.XOffset('Type:N', title='Type'),
-                color=alt.Color('Type:N', title='Type'),
+                xOffset=alt.XOffset('Type:N', title='Type', sort=CASE_TYPE_ORDER),
+                color=alt.Color('Type:N', title='Type', sort=CASE_TYPE_ORDER),
                 tooltip=[
-                    alt.Tooltip('År:N', title='År'),
+                    alt.Tooltip('År:Q', title='År'),
                     alt.Tooltip('Type:N', title='Type'),
                     alt.Tooltip('Antal:Q', title='Antal')
                 ]
@@ -147,8 +148,8 @@ def get_byggesager_overview():
             chart = alt.Chart(chart_df).mark_bar().encode(
                 x=alt.X('MånedNavn:N', title='Måned', sort=month_order),
                 y=alt.Y('Antal:Q', title='Antal byggesager'),
-                xOffset=alt.XOffset('Type:N', title='Type'),
-                color=alt.Color('Type:N', title='Type'),
+                xOffset=alt.XOffset('Type:N', title='Type', sort=CASE_TYPE_ORDER),
+                color=alt.Color('Type:N', title='Type', sort=CASE_TYPE_ORDER),
                 tooltip=[
                     alt.Tooltip('MånedNavn:N', title='Måned'),
                     alt.Tooltip('Type:N', title='Type'),
