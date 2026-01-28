@@ -5,22 +5,40 @@ from utils.database_connection import get_byggesager_db
 db_client = get_byggesager_db()
 
 
-def fetch_kategori_data():
+def fetch_monthly_data():
     query = """
     SELECT "Fra Dato", "Kategori", "Sagsbehandlingstid", "Servicemål i procent"
-    FROM "bom_data_updated"
+    FROM "bom_data_monthly"
     """
     try:
         result = db_client.execute_sql(query)
         if result is not None:
             return pd.DataFrame(result, columns=['Fra Dato', 'Kategori', 'Sagsbehandlingstid', 'Servicemål i procent'])
         else:
-            raise ValueError("Failed to fetch data from the database.")
+            raise ValueError("Failed to fetch Monthly data from the database.")
     finally:
         db_client.close_connection()
 
 
-def process_kategori_data(data):
+def fetch_glidende_gennemsnit_data():
+    query = """
+    SELECT "Fra Dato", "Til Dato", "Kategori", "Sagsbehandlingstid", "Servicemål i procent"
+    FROM "bom_data_glidende"
+    """
+    db_client = get_byggesager_db()
+    try:
+        result = db_client.execute_sql(query)
+        if result is not None:
+            return pd.DataFrame(
+                result,
+                columns=["Fra Dato", "Til Dato", "Kategori", "Sagsbehandlingstid", "Servicemål i procent"],
+            )
+        raise ValueError("Failed to fetch Glidende Gennemsnit data from the database.")
+    finally:
+        db_client.close_connection()
+
+
+def process_monthly_data(data):
     data['Fra Dato'] = pd.to_datetime(data['Fra Dato'], format='%d-%m-%Y')
     data['Sagsbehandlingstid'] = data['Sagsbehandlingstid'].astype(str).str.replace(',', '.').astype(float)
     data['Servicemål i procent'] = data['Servicemål i procent'].astype(str).str.replace(',', '.').astype(float)
@@ -28,6 +46,28 @@ def process_kategori_data(data):
     data['Year'] = data['Fra Dato'].dt.year
     data['Month'] = data['Fra Dato'].dt.month
     data['Måned'] = data['Month'].apply(lambda x: calendar.month_abbr[x])
+
+    return data
+
+
+def process_glidende_gennemsnit_data(data: pd.DataFrame) -> pd.DataFrame:
+    """
+    Glidende gennemsnit (linje) styres af 'Til Dato'.
+    Eksempel: Valgt år=2023 og måned=Jan -> brug rækken hvor Til Dato=01-01-2023.
+    """
+    if data is None or data.empty:
+        return pd.DataFrame()
+
+    data = data.copy()
+    data["Fra Dato"] = pd.to_datetime(data["Fra Dato"], format="%d-%m-%Y")
+    data["Til Dato"] = pd.to_datetime(data["Til Dato"], format="%d-%m-%Y")
+
+    data["Sagsbehandlingstid"] = data["Sagsbehandlingstid"].astype(str).str.replace(",", ".").astype(float)
+    data["Servicemål i procent"] = data["Servicemål i procent"].astype(str).str.replace(",", ".").astype(float)
+
+    data["Year"] = data["Til Dato"].dt.year
+    data["Month"] = data["Til Dato"].dt.month
+    data["Måned"] = data["Month"].apply(lambda x: calendar.month_abbr[x])
 
     return data
 
