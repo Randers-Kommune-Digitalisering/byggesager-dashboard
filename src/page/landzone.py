@@ -226,7 +226,7 @@ def get_landzonesager_overview():
             month_order = get_month_order()
             afgjorte_df["MånedNavn"] = pd.Categorical(afgjorte_df["MånedNavn"], categories=month_order, ordered=True)
 
-            total_afgjorte =  int(afgjorte_df[afgjorte_df["År"] == selected_year]["Antal"].sum())
+            total_afgjorte = int(afgjorte_df[afgjorte_df["År"] == selected_year]["Antal"].sum())
             col1, = st.columns([1])
             with col1:
                 ui.metric_card(
