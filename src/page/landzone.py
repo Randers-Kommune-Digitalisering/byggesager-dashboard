@@ -323,6 +323,7 @@ def render_landzone_tabs() -> str:
 
     return st.session_state[state_key]
 
+
 def get_landzonesager_overview():
     content_tabs = render_landzone_tabs()
 
