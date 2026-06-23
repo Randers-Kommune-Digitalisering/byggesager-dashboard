@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit_antd_components as sac
 import altair as alt
 import calendar
 from utils.byggesager_data import fetch_kategori_data, process_kategori_data, get_categories
@@ -8,16 +7,238 @@ import pandas as pd
 from io import BytesIO
 
 
-def get_sagsbehandlingstid_overview():
-    col_1 = st.columns([1])[0]
+def render_sagsbehandling_tabs() -> str:
+    """Render full-width handmade dashboard tabs."""
 
-    with col_1:
-        content_tabs = sac.tabs([
-            sac.TabsItem('Sagsbehandlingstid', tag='Sagsbehandlingstid', icon='bi bi-hourglass-split'),
-            sac.TabsItem('Servicemålprocent', tag='Servicemålprocent', icon='bi bi-bar-chart'),
-        ], color='dark', size='md', position='top', align='start', use_container_width=True)
+    if "sagsbehandling_active_tab" not in st.session_state:
+        st.session_state.sagsbehandling_active_tab = "Sagsbehandlingstid"
+
+    selected_tab = st.session_state.sagsbehandling_active_tab
+
+    st.markdown(
+        """
+<style>
+/* Wrapper around both tabs */
+.st-key-sagsbehandling_tabs {
+    width: 100%;
+    margin-bottom: 1.5rem;
+}
+
+/* Space between the two tab columns */
+.st-key-sagsbehandling_tabs [data-testid="stHorizontalBlock"] {
+    gap: 3rem;
+}
+
+/* Make each keyed tab container fill its column */
+.st-key-processing_time_tab,
+.st-key-service_goal_tab {
+    width: 100%;
+}
+
+/* Make Streamlit's button wrapper full width */
+.st-key-processing_time_tab [data-testid="stButton"],
+.st-key-service_goal_tab [data-testid="stButton"] {
+    width: 100%;
+    margin: 0;
+}
+
+/* Shared appearance for both tab buttons */
+.st-key-processing_time_tab button,
+.st-key-service_goal_tab button {
+    width: 100% !important;
+    min-height: 86px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 12px 10px;
+    margin: 0;
+
+    background-color: transparent !important;
+    color: #34343c !important;
+
+    border: none !important;
+    border-bottom: 2px solid #dddddd !important;
+    border-radius: 0 !important;
+
+    box-shadow: none !important;
+}
+
+/* Remove Streamlit focus styling */
+.st-key-processing_time_tab button:focus,
+.st-key-service_goal_tab button:focus,
+.st-key-processing_time_tab button:active,
+.st-key-service_goal_tab button:active {
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* Hover appearance */
+.st-key-processing_time_tab button:hover,
+.st-key-service_goal_tab button:hover {
+    background-color: #fafafa !important;
+    color: #34343c !important;
+}
+
+/* Text row inside each tab */
+.st-key-processing_time_tab button p,
+.st-key-service_goal_tab button p {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 9px;
+
+    margin: 0;
+
+    color: #34343c !important;
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 1.3;
+    text-align: center;
+    white-space: normal;
+}
+
+/* Bootstrap icon before each tab title */
+.st-key-processing_time_tab button p::before,
+.st-key-service_goal_tab button p::before {
+    content: "";
+
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    flex: 0 0 20px;
+
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+}
+
+/* Hourglass icon */
+.st-key-processing_time_tab button p::before {
+    background-image: url(
+        "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/hourglass-split.svg"
+    );
+}
+
+/* Bar-chart icon */
+.st-key-service_goal_tab button p::before {
+    background-image: url(
+        "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/bar-chart.svg"
+    );
+}
+
+/* Shared grey pill */
+.st-key-processing_time_tab button p::after,
+.st-key-service_goal_tab button p::after {
+    display: inline-block;
+
+    padding: 3px 10px;
+
+    background-color: #f1f1f1;
+    border: 1px solid #d1d1d1;
+    border-radius: 999px;
+
+    color: #55555d;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+/* Sagsbehandlingstid pill text */
+.st-key-processing_time_tab button p::after {
+    content: "Sagsbehandlingstid";
+}
+
+/* Servicemålprocent pill text */
+.st-key-service_goal_tab button p::after {
+    content: "Servicemålprocent";
+}
+
+/* Responsive layout */
+@media (max-width: 850px) {
+    .st-key-sagsbehandling_tabs [data-testid="stHorizontalBlock"] {
+        gap: 0.75rem;
+    }
+
+    .st-key-processing_time_tab button,
+    .st-key-service_goal_tab button {
+        min-height: 72px;
+    }
+
+    .st-key-processing_time_tab button p,
+    .st-key-service_goal_tab button p {
+        font-size: 17px;
+    }
+}
+</style>
+""",
+        unsafe_allow_html=True,
+    )
+
+    # Dark underline on the selected tab.
+    if selected_tab == "Sagsbehandlingstid":
+        st.markdown(
+            """
+<style>
+.st-key-processing_time_tab button {
+    border-bottom-color: #2f2f2f !important;
+}
+</style>
+""",
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown(
+            """
+<style>
+.st-key-service_goal_tab button {
+    border-bottom-color: #2f2f2f !important;
+}
+</style>
+""",
+            unsafe_allow_html=True,
+        )
+
+    def select_tab(tab_name: str) -> None:
+        st.session_state.sagsbehandling_active_tab = tab_name
+
+    with st.container(key="sagsbehandling_tabs"):
+        processing_column, service_column = st.columns(
+            2,
+            gap="large",
+        )
+
+        with processing_column:
+            with st.container(key="processing_time_tab"):
+                st.button(
+                    "Sagsbehandlingstid",
+                    key="processing_time_tab_button",
+                    use_container_width=True,
+                    on_click=select_tab,
+                    args=("Sagsbehandlingstid",),
+                )
+
+        with service_column:
+            with st.container(key="service_goal_tab"):
+                st.button(
+                    "Servicemålprocent",
+                    key="service_goal_tab_button",
+                    use_container_width=True,
+                    on_click=select_tab,
+                    args=("Servicemålprocent",),
+                )
+
+    return st.session_state.sagsbehandling_active_tab
+
+
+def get_sagsbehandlingstid_overview():
+    content_tabs = render_sagsbehandling_tabs()
 
     try:
+
         historical_data = fetch_kategori_data()
         if historical_data is None:
             st.error("Failed to fetch data from the database.")

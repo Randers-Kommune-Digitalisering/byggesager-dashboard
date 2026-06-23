@@ -4,20 +4,324 @@ import altair as alt
 from io import BytesIO
 from utils.database_connection import get_byggesager_db
 from utils.byggesager_data import get_month_map, get_month_order
-import streamlit_antd_components as sac
 import streamlit_shadcn_ui as ui
 
 db_client = get_byggesager_db()
 
+BYGGESAGER_TABS = [
+    {
+        "value": "Antal Modtagne & Afgjorte byggesager",
+        "label": "Modtagne & Afgjorte",
+        "pill": "Samlet",
+        "icon": (
+            "https://cdn.jsdelivr.net/npm/"
+            "bootstrap-icons@1.11.3/icons/building.svg"
+        ),
+        "container_key": "byggesager_combined_tab",
+    },
+    {
+        "value": "Antal Modtagne Byggesager",
+        "label": "Modtagne",
+        "pill": "Byggesager",
+        "icon": (
+            "https://cdn.jsdelivr.net/npm/"
+            "bootstrap-icons@1.11.3/icons/building-add.svg"
+        ),
+        "container_key": "byggesager_received_tab",
+    },
+    {
+        "value": "Antal Afgjorte Byggesager",
+        "label": "Afgjorte",
+        "pill": "Byggesager",
+        "icon": (
+            "https://cdn.jsdelivr.net/npm/"
+            "bootstrap-icons@1.11.3/icons/building-fill-check.svg"
+        ),
+        "container_key": "byggesager_decided_tab",
+    },
+    {
+        "value": "Antal Modtagede Byggesager opdelt efter Type",
+        "label": "Byggesagstype",
+        "pill": "Modtagne",
+        "icon": (
+            "https://cdn.jsdelivr.net/npm/"
+            "bootstrap-icons@1.11.3/icons/buildings-fill.svg"
+        ),
+        "container_key": "byggesager_received_type_tab",
+    },
+    {
+        "value": (
+            "Antal Afgjorte Byggesager "
+            "opdelt efter Afgørelsestype"
+        ),
+        "label": "Afgørelsestype",
+        "pill": "Afgjorte",
+        "icon": (
+            "https://cdn.jsdelivr.net/npm/"
+            "bootstrap-icons@1.11.3/icons/buildings.svg"
+        ),
+        "container_key": "byggesager_decision_type_tab",
+    },
+]
+
+
+def render_byggesager_tabs() -> str:
+    """Render the five handmade Byggesager tabs."""
+
+    state_key = "byggesager_active_tab"
+
+    if state_key not in st.session_state:
+        st.session_state[state_key] = BYGGESAGER_TABS[0]["value"]
+
+    selected_tab = st.session_state[state_key]
+
+    tab_specific_css = []
+
+    for tab in BYGGESAGER_TABS:
+        tab_specific_css.append(
+            f"""
+.st-key-{tab["container_key"]} button p::before {{
+    background-image: url("{tab["icon"]}");
+}}
+
+.st-key-{tab["container_key"]} button p::after {{
+    content: "{tab["pill"]}";
+}}
+"""
+        )
+
+    st.markdown(
+        f"""
+<style>
+/* Wrapper around all five tabs */
+.st-key-byggesager_tabs {{
+    width: 100%;
+    margin-bottom: 1.5rem;
+}}
+
+/* Five equal-width columns */
+.st-key-byggesager_tabs
+[data-testid="stHorizontalBlock"] {{
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 1rem !important;
+    width: 100%;
+}}
+
+/* Remove Streamlit column width restrictions */
+.st-key-byggesager_tabs
+[data-testid="stHorizontalBlock"]
+> [data-testid="stColumn"] {{
+    width: 100% !important;
+    min-width: 0 !important;
+    flex: none !important;
+}}
+
+/* Tab containers */
+.st-key-byggesager_combined_tab,
+.st-key-byggesager_received_tab,
+.st-key-byggesager_decided_tab,
+.st-key-byggesager_received_type_tab,
+.st-key-byggesager_decision_type_tab {{
+    width: 100%;
+}}
+
+/* Full-width button wrappers */
+.st-key-byggesager_combined_tab [data-testid="stButton"],
+.st-key-byggesager_received_tab [data-testid="stButton"],
+.st-key-byggesager_decided_tab [data-testid="stButton"],
+.st-key-byggesager_received_type_tab [data-testid="stButton"],
+.st-key-byggesager_decision_type_tab [data-testid="stButton"] {{
+    width: 100%;
+    margin: 0;
+}}
+
+/* Shared tab appearance */
+.st-key-byggesager_combined_tab button,
+.st-key-byggesager_received_tab button,
+.st-key-byggesager_decided_tab button,
+.st-key-byggesager_received_type_tab button,
+.st-key-byggesager_decision_type_tab button {{
+    width: 100% !important;
+    min-height: 118px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 12px 8px;
+    margin: 0;
+
+    background-color: transparent !important;
+    color: #34343c !important;
+
+    border: none !important;
+    border-bottom: 2px solid #dddddd !important;
+    border-radius: 0 !important;
+
+    box-shadow: none !important;
+}}
+
+/* Remove default focus styling */
+.st-key-byggesager_combined_tab button:focus,
+.st-key-byggesager_received_tab button:focus,
+.st-key-byggesager_decided_tab button:focus,
+.st-key-byggesager_received_type_tab button:focus,
+.st-key-byggesager_decision_type_tab button:focus,
+.st-key-byggesager_combined_tab button:active,
+.st-key-byggesager_received_tab button:active,
+.st-key-byggesager_decided_tab button:active,
+.st-key-byggesager_received_type_tab button:active,
+.st-key-byggesager_decision_type_tab button:active {{
+    box-shadow: none !important;
+    outline: none !important;
+}}
+
+/* Hover appearance */
+.st-key-byggesager_combined_tab button:hover,
+.st-key-byggesager_received_tab button:hover,
+.st-key-byggesager_decided_tab button:hover,
+.st-key-byggesager_received_type_tab button:hover,
+.st-key-byggesager_decision_type_tab button:hover {{
+    background-color: #fafafa !important;
+    color: #34343c !important;
+}}
+
+/* Icon, title and pill layout */
+.st-key-byggesager_combined_tab button p,
+.st-key-byggesager_received_tab button p,
+.st-key-byggesager_decided_tab button p,
+.st-key-byggesager_received_type_tab button p,
+.st-key-byggesager_decision_type_tab button p {{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    width: 100%;
+    margin: 0;
+
+    color: #34343c !important;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.25;
+    text-align: center;
+    white-space: normal;
+}}
+
+/* Bootstrap icon */
+.st-key-byggesager_combined_tab button p::before,
+.st-key-byggesager_received_tab button p::before,
+.st-key-byggesager_decided_tab button p::before,
+.st-key-byggesager_received_type_tab button p::before,
+.st-key-byggesager_decision_type_tab button p::before {{
+    content: "";
+
+    display: block;
+    width: 21px;
+    height: 21px;
+    flex: 0 0 21px;
+
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+}}
+
+/* Grey pill */
+.st-key-byggesager_combined_tab button p::after,
+.st-key-byggesager_received_tab button p::after,
+.st-key-byggesager_decided_tab button p::after,
+.st-key-byggesager_received_type_tab button p::after,
+.st-key-byggesager_decision_type_tab button p::after {{
+    display: inline-block;
+    padding: 3px 9px;
+
+    background-color: #f1f1f1;
+    border: 1px solid #d1d1d1;
+    border-radius: 999px;
+
+    color: #55555d;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.2;
+    white-space: nowrap;
+}}
+
+{"".join(tab_specific_css)}
+
+/* Three columns on medium-width screens */
+@media (max-width: 1200px) {{
+    .st-key-byggesager_tabs
+    [data-testid="stHorizontalBlock"] {{
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }}
+}}
+
+/* One column on small screens */
+@media (max-width: 700px) {{
+    .st-key-byggesager_tabs
+    [data-testid="stHorizontalBlock"] {{
+        grid-template-columns: 1fr;
+        gap: 0.5rem !important;
+    }}
+
+    .st-key-byggesager_combined_tab button,
+    .st-key-byggesager_received_tab button,
+    .st-key-byggesager_decided_tab button,
+    .st-key-byggesager_received_type_tab button,
+    .st-key-byggesager_decision_type_tab button {{
+        min-height: 80px;
+    }}
+}}
+</style>
+""",
+        unsafe_allow_html=True,
+    )
+
+    active_container_key = next(
+        tab["container_key"]
+        for tab in BYGGESAGER_TABS
+        if tab["value"] == selected_tab
+    )
+
+    # Dark underline beneath the selected tab.
+    st.markdown(
+        f"""
+<style>
+.st-key-{active_container_key} button {{
+    border-bottom-color: #2f2f2f !important;
+}}
+</style>
+""",
+        unsafe_allow_html=True,
+    )
+
+    def select_byggesager_tab(tab_value: str) -> None:
+        st.session_state[state_key] = tab_value
+
+    with st.container(key="byggesager_tabs"):
+        tab_columns = st.columns(
+            len(BYGGESAGER_TABS),
+            gap="small",
+        )
+
+        for column, tab in zip(tab_columns, BYGGESAGER_TABS):
+            with column:
+                with st.container(key=tab["container_key"]):
+                    st.button(
+                        tab["label"],
+                        key=f'{tab["container_key"]}_button',
+                        use_container_width=True,
+                        on_click=select_byggesager_tab,
+                        args=(tab["value"],),
+                    )
+
+    return st.session_state[state_key]
+
 
 def get_byggesager_overview():
-    content_tabs = sac.tabs([
-        sac.TabsItem('Antal Modtagne & Afgjorte byggesager', tag='Modtagne & Afgjorte', icon='bi bi-building'),
-        sac.TabsItem('Antal Modtagne Byggesager', tag='Modtagne Byggesager', icon='bi bi-building-add'),
-        sac.TabsItem('Antal Afgjorte Byggesager', tag='Afgjorte Byggesager', icon='bi bi-building-fill-check'),
-        sac.TabsItem('Antal Modtagede Byggesager opdelt efter Type', tag='Type', icon='bi bi-buildings-fill'),
-        sac.TabsItem('Antal Afgjorte Byggesager opdelt efter Afgørelsestype', tag='Afgørelsestype', icon='bi bi-buildings'),
-    ], color='dark', size='md', position='top', align='start', use_container_width=True)
+    content_tabs = render_byggesager_tabs()
 
     try:
         if 'byggesager_data' not in st.session_state:

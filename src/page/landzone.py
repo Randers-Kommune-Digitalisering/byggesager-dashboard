@@ -4,20 +4,327 @@ import altair as alt
 from io import BytesIO
 from utils.database_connection import get_byggesager_db
 from utils.byggesager_data import get_month_map, get_month_order
-import streamlit_antd_components as sac
 import streamlit_shadcn_ui as ui
 
 db_client = get_byggesager_db()
 
 
+LANDZONE_TABS = [
+    {
+        "value": "Antal Modtagne & Afgjorte landzonesager",
+        "label": "Modtagne & Afgjorte",
+        "pill": "Samlet",
+        "icon": (
+            "https://cdn.jsdelivr.net/npm/"
+            "bootstrap-icons@1.11.3/icons/building.svg"
+        ),
+        "container_key": "landzone_combined_tab",
+    },
+    {
+        "value": "Antal Modtagne Landzonesager",
+        "label": "Modtagne",
+        "pill": "Landzonesager",
+        "icon": (
+            "https://cdn.jsdelivr.net/npm/"
+            "bootstrap-icons@1.11.3/icons/building-add.svg"
+        ),
+        "container_key": "landzone_received_tab",
+    },
+    {
+        "value": "Antal Afgjorte Landzonesager",
+        "label": "Afgjorte",
+        "pill": "Landzonesager",
+        "icon": (
+            "https://cdn.jsdelivr.net/npm/"
+            "bootstrap-icons@1.11.3/icons/building-fill-check.svg"
+        ),
+        "container_key": "landzone_decided_tab",
+    },
+    {
+        "value": (
+            "Antal Modtagne landzonesager "
+            "opdelt efter Ansøgningstype"
+        ),
+        "label": "Ansøgningstype",
+        "pill": "Modtagne",
+        "icon": (
+            "https://cdn.jsdelivr.net/npm/"
+            "bootstrap-icons@1.11.3/icons/buildings-fill.svg"
+        ),
+        "container_key": "landzone_application_type_tab",
+    },
+    {
+        "value": (
+            "Antal Afgjorte Landzonesager "
+            "opdelt efter Type"
+        ),
+        "label": "Afgørelsestype",
+        "pill": "Afgjorte",
+        "icon": (
+            "https://cdn.jsdelivr.net/npm/"
+            "bootstrap-icons@1.11.3/icons/buildings.svg"
+        ),
+        "container_key": "landzone_decision_type_tab",
+    },
+]
+
+
+def render_landzone_tabs() -> str:
+    """Render the five handmade Landzonesager tabs."""
+
+    state_key = "landzone_active_tab"
+
+    if state_key not in st.session_state:
+        st.session_state[state_key] = LANDZONE_TABS[0]["value"]
+
+    selected_tab = st.session_state[state_key]
+
+    tab_specific_css = []
+
+    for tab in LANDZONE_TABS:
+        tab_specific_css.append(
+            f"""
+.st-key-{tab["container_key"]} button p::before {{
+    background-image: url("{tab["icon"]}");
+}}
+
+.st-key-{tab["container_key"]} button p::after {{
+    content: "{tab["pill"]}";
+}}
+"""
+        )
+
+    st.markdown(
+        f"""
+<style>
+/* Wrapper around all five tabs */
+.st-key-landzone_tabs {{
+    width: 100%;
+    margin-bottom: 1.5rem;
+}}
+
+/* Five equal-width columns */
+.st-key-landzone_tabs
+[data-testid="stHorizontalBlock"] {{
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 1rem !important;
+    width: 100%;
+}}
+
+/* Remove Streamlit's column width restrictions */
+.st-key-landzone_tabs
+[data-testid="stHorizontalBlock"]
+> [data-testid="stColumn"] {{
+    width: 100% !important;
+    min-width: 0 !important;
+    flex: none !important;
+}}
+
+/* Every keyed tab container */
+.st-key-landzone_combined_tab,
+.st-key-landzone_received_tab,
+.st-key-landzone_decided_tab,
+.st-key-landzone_application_type_tab,
+.st-key-landzone_decision_type_tab {{
+    width: 100%;
+}}
+
+/* Full-width Streamlit button wrappers */
+.st-key-landzone_combined_tab [data-testid="stButton"],
+.st-key-landzone_received_tab [data-testid="stButton"],
+.st-key-landzone_decided_tab [data-testid="stButton"],
+.st-key-landzone_application_type_tab [data-testid="stButton"],
+.st-key-landzone_decision_type_tab [data-testid="stButton"] {{
+    width: 100%;
+    margin: 0;
+}}
+
+/* Shared tab appearance */
+.st-key-landzone_combined_tab button,
+.st-key-landzone_received_tab button,
+.st-key-landzone_decided_tab button,
+.st-key-landzone_application_type_tab button,
+.st-key-landzone_decision_type_tab button {{
+    width: 100% !important;
+    min-height: 118px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 12px 8px;
+    margin: 0;
+
+    background-color: transparent !important;
+    color: #34343c !important;
+
+    border: none !important;
+    border-bottom: 2px solid #dddddd !important;
+    border-radius: 0 !important;
+
+    box-shadow: none !important;
+}}
+
+/* Remove Streamlit focus styling */
+.st-key-landzone_combined_tab button:focus,
+.st-key-landzone_received_tab button:focus,
+.st-key-landzone_decided_tab button:focus,
+.st-key-landzone_application_type_tab button:focus,
+.st-key-landzone_decision_type_tab button:focus,
+.st-key-landzone_combined_tab button:active,
+.st-key-landzone_received_tab button:active,
+.st-key-landzone_decided_tab button:active,
+.st-key-landzone_application_type_tab button:active,
+.st-key-landzone_decision_type_tab button:active {{
+    box-shadow: none !important;
+    outline: none !important;
+}}
+
+/* Hover appearance */
+.st-key-landzone_combined_tab button:hover,
+.st-key-landzone_received_tab button:hover,
+.st-key-landzone_decided_tab button:hover,
+.st-key-landzone_application_type_tab button:hover,
+.st-key-landzone_decision_type_tab button:hover {{
+    background-color: #fafafa !important;
+    color: #34343c !important;
+}}
+
+/* Icon, title and pill layout */
+.st-key-landzone_combined_tab button p,
+.st-key-landzone_received_tab button p,
+.st-key-landzone_decided_tab button p,
+.st-key-landzone_application_type_tab button p,
+.st-key-landzone_decision_type_tab button p {{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    width: 100%;
+    margin: 0;
+
+    color: #34343c !important;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.25;
+    text-align: center;
+    white-space: normal;
+}}
+
+/* Bootstrap icon */
+.st-key-landzone_combined_tab button p::before,
+.st-key-landzone_received_tab button p::before,
+.st-key-landzone_decided_tab button p::before,
+.st-key-landzone_application_type_tab button p::before,
+.st-key-landzone_decision_type_tab button p::before {{
+    content: "";
+
+    display: block;
+    width: 21px;
+    height: 21px;
+    flex: 0 0 21px;
+
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+}}
+
+/* Grey pill */
+.st-key-landzone_combined_tab button p::after,
+.st-key-landzone_received_tab button p::after,
+.st-key-landzone_decided_tab button p::after,
+.st-key-landzone_application_type_tab button p::after,
+.st-key-landzone_decision_type_tab button p::after {{
+    display: inline-block;
+    padding: 3px 9px;
+
+    background-color: #f1f1f1;
+    border: 1px solid #d1d1d1;
+    border-radius: 999px;
+
+    color: #55555d;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.2;
+    white-space: nowrap;
+}}
+
+{"".join(tab_specific_css)}
+
+/* Use three columns on medium-sized screens */
+@media (max-width: 1200px) {{
+    .st-key-landzone_tabs
+    [data-testid="stHorizontalBlock"] {{
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }}
+}}
+
+/* Stack tabs on small screens */
+@media (max-width: 700px) {{
+    .st-key-landzone_tabs
+    [data-testid="stHorizontalBlock"] {{
+        grid-template-columns: 1fr;
+        gap: 0.5rem !important;
+    }}
+
+    .st-key-landzone_combined_tab button,
+    .st-key-landzone_received_tab button,
+    .st-key-landzone_decided_tab button,
+    .st-key-landzone_application_type_tab button,
+    .st-key-landzone_decision_type_tab button {{
+        min-height: 80px;
+    }}
+}}
+</style>
+""",
+        unsafe_allow_html=True,
+    )
+
+    active_container_key = next(
+        tab["container_key"]
+        for tab in LANDZONE_TABS
+        if tab["value"] == selected_tab
+    )
+
+    # Dark underline underneath the selected tab.
+    st.markdown(
+        f"""
+<style>
+.st-key-{active_container_key} button {{
+    border-bottom-color: #2f2f2f !important;
+}}
+</style>
+""",
+        unsafe_allow_html=True,
+    )
+
+    def select_landzone_tab(tab_value: str) -> None:
+        st.session_state[state_key] = tab_value
+
+    with st.container(key="landzone_tabs"):
+        tab_columns = st.columns(
+            len(LANDZONE_TABS),
+            gap="small",
+        )
+
+        for column, tab in zip(tab_columns, LANDZONE_TABS):
+            with column:
+                with st.container(key=tab["container_key"]):
+                    st.button(
+                        tab["label"],
+                        key=f'{tab["container_key"]}_button',
+                        use_container_width=True,
+                        on_click=select_landzone_tab,
+                        args=(tab["value"],),
+                    )
+
+    return st.session_state[state_key]
+
 def get_landzonesager_overview():
-    content_tabs = sac.tabs([
-        sac.TabsItem('Antal Modtagne & Afgjorte landzonesager', tag='Modtagne & Afgjorte', icon='bi bi-building'),
-        sac.TabsItem('Antal Modtagne Landzonesager', tag='Modtagne Landzonesager', icon='bi bi-building-add'),
-        sac.TabsItem('Antal Afgjorte Landzonesager', tag='Afgjorte Landzonesager', icon='bi bi-building-fill-check'),
-        sac.TabsItem('Antal Modtagne landzonesager opdelt efter Ansøgningstype', tag='Ansøgningstype', icon='bi bi-buildings-fill'),
-        sac.TabsItem('Antal Afgjorte Landzonesager opdelt efter Type', tag='Type', icon='bi bi-buildings'),
-    ], color='dark', size='md', position='top', align='start', use_container_width=True)
+    content_tabs = render_landzone_tabs()
 
     try:
         if 'landzonesager_data' not in st.session_state:
