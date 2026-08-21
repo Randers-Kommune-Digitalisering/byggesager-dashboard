@@ -59,14 +59,14 @@ def get_sagsbehandlingstid_overview():
             if glidende_result is not None and not glidende_result.empty:
                 _cat_all = glidende_result[glidende_result["Kategori"] == selected_category].sort_values("Til Dato")
                 if not _cat_all.empty:
-                    avg_glidende_service_goal = _cat_all["Servicemål i procent"].tail(12).mean()
+                    avg_glidende_service_goal = _cat_all["Servicemål i procent"].iloc[-1]
 
             col1 = st.columns(1)[0]
             with col1:
                 ui.metric_card(
-                    title="Gennemsnitligt Servicemål (12 måneder) (%)",
+                    title="Seneste glidende gennemsnit Servicemålprocent (%)",
                     content=f"{avg_glidende_service_goal:.2f}" if avg_glidende_service_goal is not None else "—",
-                    description="Gennemsnit af de seneste 12 glidende værdier (fra databasen)."
+                    description="Seneste glidende gennemsnit servicemålprocent fra databasen."
                 )
 
             monthly_data = category_data.groupby('Måned', sort=False).mean(numeric_only=True).reset_index()
@@ -148,14 +148,14 @@ def get_sagsbehandlingstid_overview():
             if glidende_result is not None and not glidende_result.empty:
                 _cat_all = glidende_result[glidende_result["Kategori"] == selected_category].sort_values("Til Dato")
                 if not _cat_all.empty:
-                    avg_glidende_processing_time = _cat_all["Sagsbehandlingstid"].tail(12).mean()
+                    avg_glidende_processing_time = _cat_all["Sagsbehandlingstid"].iloc[-1]
 
             col1 = st.columns(1)[0]
             with col1:
                 ui.metric_card(
-                    title="Gennemsnitlig Sagsbehandlingstid (12 måneder) (dage)",
+                    title="Seneste glidende gennemsnit for Sagsbehandlingstid (dage)",
                     content=f"{avg_glidende_processing_time:.2f}" if avg_glidende_processing_time is not None else "—",
-                    description="Gennemsnit af de seneste 12 glidende værdier (fra databasen)."
+                    description="Seneste glidende gennemsnit fra databasen."
                 )
 
             monthly_data = category_data.groupby('Måned', sort=False).mean(numeric_only=True).reset_index()

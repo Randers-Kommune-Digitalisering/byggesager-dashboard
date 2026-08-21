@@ -54,7 +54,7 @@ def get_byggesager_overview():
     month_map = get_month_map()
     df["MånedNavn"] = df["Måned"].map(month_map)
 
-    available_years = sorted(df["År"].unique())[2:]
+    available_years = [int(year) for year in sorted(df["År"].dropna().unique())[2:]]
     if content_tabs == 'Antal Modtagne & Afgjorte byggesager':
         available_years.append("Alle år")
         selected_year = st.selectbox("Vælg år", available_years, index=len(available_years) - 2)
@@ -65,21 +65,24 @@ def get_byggesager_overview():
         if selected_year == "Alle år":
             chart_df = df.dropna(subset=["År", "Type", "Antal"])
             chart_df = chart_df.groupby(["År", "Type"], as_index=False)["Antal"].sum()
-            total_modtagne = int(chart_df[chart_df["Type"] == "Modtagede"]["Antal"].sum())
-            total_afgjorte = int(chart_df[chart_df["Type"] == "Afgjorte"]["Antal"].sum())
+            latest_year = int(chart_df["År"].max()) if not chart_df.empty else None
+            latest_year_df = chart_df[chart_df["År"] == latest_year] if latest_year is not None else chart_df.iloc[0:0]
+            total_modtagne = int(latest_year_df[latest_year_df["Type"] == "Modtagede"]["Antal"].sum())
+            total_afgjorte = int(latest_year_df[latest_year_df["Type"] == "Afgjorte"]["Antal"].sum())
+            metric_year_label = str(latest_year) if latest_year is not None else "ukendt år"
 
             col1, col2 = st.columns([1, 1])
             with col1:
                 ui.metric_card(
                     title="Samlet antal Modtagne byggesager",
                     content=total_modtagne,
-                    description="Modtagne byggesager (alle år)."
+                    description=f"Modtagne byggesager i {metric_year_label}."
                 )
             with col2:
                 ui.metric_card(
                     title="Samlet antal Afgjorte byggesager",
                     content=total_afgjorte,
-                    description="Afgjorte byggesager (alle år)."
+                    description=f"Afgjorte byggesager i {metric_year_label}."
                 )
 
             st.header("Antal modtagne og afgjorte byggesager - Alle år", divider="gray")

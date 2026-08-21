@@ -52,8 +52,8 @@ def process_monthly_data(data):
 
 def process_glidende_gennemsnit_data(data: pd.DataFrame) -> pd.DataFrame:
     """
-    Glidende gennemsnit (linje) styres af 'Til Dato'.
-    Eksempel: Valgt år=2023 og måned=Jan -> brug rækken hvor Til Dato=01-01-2023.
+    Glidende gennemsnit vises for måneden, der slutter ved 'Til Dato'.
+    Rækker uden gyldige værdier for begge mål vises ikke.
     """
     if data is None or data.empty:
         return pd.DataFrame()
@@ -62,11 +62,26 @@ def process_glidende_gennemsnit_data(data: pd.DataFrame) -> pd.DataFrame:
     data["Fra Dato"] = pd.to_datetime(data["Fra Dato"], format="%d-%m-%Y")
     data["Til Dato"] = pd.to_datetime(data["Til Dato"], format="%d-%m-%Y")
 
-    data["Sagsbehandlingstid"] = data["Sagsbehandlingstid"].astype(str).str.replace(",", ".").astype(float)
-    data["Servicemål i procent"] = data["Servicemål i procent"].astype(str).str.replace(",", ".").astype(float)
+    data["Sagsbehandlingstid"] = pd.to_numeric(
+        data["Sagsbehandlingstid"].astype(str).str.replace(",", "."),
+        errors="coerce",
+    )
+    data["Servicemål i procent"] = pd.to_numeric(
+        data["Servicemål i procent"].astype(str).str.replace(",", "."),
+        errors="coerce",
+    )
 
-    data["Year"] = data["Til Dato"].dt.year
-    data["Month"] = data["Til Dato"].dt.month
+    valid_values = (
+        data["Sagsbehandlingstid"].gt(0)
+        & data["Servicemål i procent"].gt(0)
+    )
+    data = data.loc[valid_values].copy()
+
+    # 'Til Dato' is the end of the monthly period represented by the row.
+    data["Visningsdato"] = data["Til Dato"] - pd.DateOffset(months=1)
+
+    data["Year"] = data["Visningsdato"].dt.year
+    data["Month"] = data["Visningsdato"].dt.month
     data["Måned"] = data["Month"].apply(lambda x: calendar.month_abbr[x])
 
     return data
