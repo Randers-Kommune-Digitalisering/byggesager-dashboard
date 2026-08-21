@@ -16,5 +16,5 @@ streamlit-option-menu
 streamlit-antd-components
 altair==5.2.0
 pymysql
-streamlit_shadcn_ui
+streamlit_shadcn_ui==0.1.18
 xlsxwriter
