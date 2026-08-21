@@ -13,7 +13,15 @@ def fetch_monthly_data():
     try:
         result = db_client.execute_sql(query)
         if result is not None:
-            return pd.DataFrame(result, columns=['Fra Dato', 'Kategori', 'Sagsbehandlingstid', 'Servicemål i procent'])
+            return pd.DataFrame(
+                result,
+                columns=[
+                    "Fra Dato",
+                    "Kategori",
+                    "Sagsbehandlingstid",
+                    "Servicemål i procent",
+                ],
+            )
         else:
             raise ValueError("Failed to fetch Monthly data from the database.")
     finally:
@@ -31,7 +39,13 @@ def fetch_glidende_gennemsnit_data():
         if result is not None:
             return pd.DataFrame(
                 result,
-                columns=["Fra Dato", "Til Dato", "Kategori", "Sagsbehandlingstid", "Servicemål i procent"],
+                columns=[
+                    "Fra Dato",
+                    "Til Dato",
+                    "Kategori",
+                    "Sagsbehandlingstid",
+                    "Servicemål i procent",
+                ],
             )
         raise ValueError("Failed to fetch Glidende Gennemsnit data from the database.")
     finally:
@@ -39,13 +53,17 @@ def fetch_glidende_gennemsnit_data():
 
 
 def process_monthly_data(data):
-    data['Fra Dato'] = pd.to_datetime(data['Fra Dato'], format='%d-%m-%Y')
-    data['Sagsbehandlingstid'] = data['Sagsbehandlingstid'].astype(str).str.replace(',', '.').astype(float)
-    data['Servicemål i procent'] = data['Servicemål i procent'].astype(str).str.replace(',', '.').astype(float)
+    data["Fra Dato"] = pd.to_datetime(data["Fra Dato"], format="%d-%m-%Y")
+    data["Sagsbehandlingstid"] = (
+        data["Sagsbehandlingstid"].astype(str).str.replace(",", ".").astype(float)
+    )
+    data["Servicemål i procent"] = (
+        data["Servicemål i procent"].astype(str).str.replace(",", ".").astype(float)
+    )
 
-    data['Year'] = data['Fra Dato'].dt.year
-    data['Month'] = data['Fra Dato'].dt.month
-    data['Måned'] = data['Month'].apply(lambda x: calendar.month_abbr[x])
+    data["Year"] = data["Fra Dato"].dt.year
+    data["Month"] = data["Fra Dato"].dt.month
+    data["Måned"] = data["Month"].apply(lambda x: calendar.month_abbr[x])
 
     return data
 
@@ -71,10 +89,7 @@ def process_glidende_gennemsnit_data(data: pd.DataFrame) -> pd.DataFrame:
         errors="coerce",
     )
 
-    valid_values = (
-        data["Sagsbehandlingstid"].gt(0)
-        & data["Servicemål i procent"].gt(0)
-    )
+    valid_values = data["Sagsbehandlingstid"].gt(0) & data["Servicemål i procent"].gt(0)
     data = data.loc[valid_values].copy()
 
     # 'Til Dato' is the end of the monthly period represented by the row.
@@ -94,16 +109,39 @@ def get_categories():
         "Enfamilieshuse (byg)",
         "Industri og lagerbygninger (byg)",
         "Etagebyggeri, Erhverv (byg)",
-        "Etagebyggeri, Boliger (byg)"
+        "Etagebyggeri, Boliger (byg)",
     ]
 
 
 def get_month_map():
     return {
-        1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "Maj", 6: "Jun",
-        7: "Jul", 8: "Aug", 9: "Sep", 10: "Okt", 11: "Nov", 12: "Dec"
+        1: "Jan",
+        2: "Feb",
+        3: "Mar",
+        4: "Apr",
+        5: "Maj",
+        6: "Jun",
+        7: "Jul",
+        8: "Aug",
+        9: "Sep",
+        10: "Okt",
+        11: "Nov",
+        12: "Dec",
     }
 
 
 def get_month_order():
-    return ["Jan", "Feb", "Mar", "Apr", "Maj", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"]
+    return [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "Maj",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Okt",
+        "Nov",
+        "Dec",
+    ]
